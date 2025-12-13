@@ -449,6 +449,37 @@ function loadHallOfFame() {
     list.appendChild(li);
   });
 }
+//masuk top3 ade confetti
+function launchConfetti(count = 120) {
+  for (let i = 0; i < count; i++) {
+    const confetti = document.createElement("div");
+    confetti.className = "confetti";
+
+    const colors = ["#FFD700", "#FF5733", "#33FF57", "#3399FF", "#FF33A8"];
+    confetti.style.backgroundColor =
+      colors[Math.floor(Math.random() * colors.length)];
+
+    confetti.style.left = Math.random() * 100 + "vw";
+    confetti.style.animationDuration = 2 + Math.random() * 2 + "s";
+
+    document.body.appendChild(confetti);
+
+    setTimeout(() => confetti.remove(), 4000);
+  }
+}
+document.addEventListener("keydown", (e) => {
+  if (endModal.style.display !== "block") return;
+  if (e.key === "Enter") {
+    e.preventDefault();
+    saveHallOfFame();
+  }
+});
+
+function resetHallOfFame() {
+  if (!confirm("Padam semua rekod Hall of Fame?")) return;
+  localStorage.removeItem(HOF_KEY);
+  loadHallOfFame();
+}
 
 
 /* ============================================================

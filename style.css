@@ -1,4 +1,6 @@
-/* RESET */
+/* =====================================================
+   RESET – MAIN PAGE
+===================================================== */
 * {
   box-sizing: border-box;
   font-family: "Segoe UI", sans-serif;
@@ -82,6 +84,56 @@ body {
 /* RESPONSIVE */
 @media (max-width: 700px) {
   .menu {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
+   HALL OF FAME – MAIN PAGE
+===================================================== */
+
+.hof-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.hof-box {
+  background: rgba(0,0,0,0.25);
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.hof-box h2 {
+  margin-top: 0;
+}
+
+.hof-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hof-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.hof-list li:last-child {
+  border-bottom: none;
+}
+
+.hof-list .empty {
+  opacity: 0.6;
+  text-align: center;
+}
+
+/* Responsive HOF */
+@media (max-width: 700px) {
+  .hof-wrapper {
     grid-template-columns: 1fr;
   }
 }

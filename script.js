@@ -45,8 +45,12 @@ function loadQRHOF() {
 function loadVideoHOF() {
   const list = document.getElementById("hofVideo");
   if (!list) return;
+  // cuba baca dari dua tempat
+  const rawVideo1 = localStorage.getItem(HOF_VIDEO_KEY);  // hof_video
+  const rawVideo2 = localStorage.getItem("HOF_KEY");      // key lama
+  const raw = rawVideo1 || rawVideo2;
 
-  const hof = JSON.parse(localStorage.getItem(HOF_VIDEO_KEY) || "[]");
+  const hof = raw ? JSON.parse(raw) : [];
   list.innerHTML = "";
 
   if (hof.length === 0) {

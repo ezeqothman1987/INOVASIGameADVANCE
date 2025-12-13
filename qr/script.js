@@ -15,6 +15,7 @@ const NEXT_ROUND_TIME = 20;  // time to display after correct (paused)
 const MAX_POINTS = 10;
 const MIN_POINTS = 1;
 const AUDIO_PATH = "static/sound/"; // ensure files exist: correct.mp3, wrong.mp3, timeup.mp3
+const HOF_KEY = "hof_qr";
 
 /* =========================
    1) AUDIO + safePlay

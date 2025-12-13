@@ -77,7 +77,6 @@ body {
 }
 
 #hofList {
-  margin-top: 60px; /* turunkan Hall of Fame */
   list-style: none;
   font-size: 14px;
 }
@@ -399,7 +398,7 @@ body {
 ========================= */
 .back-home-btn {
   position: fixed;
-  top: 12px;
+  top: 64px;
   left: 12px;
   padding: 8px 14px;
   background: rgba(0,0,0,0.65);

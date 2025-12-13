@@ -582,15 +582,27 @@ async function connectArduinoSerial() {
 /* =========================
    12) INIT
    ========================= */
-document.addEventListener("DOMContentLoaded", ()=> {
-    initUI();
-    loadHallOfFame();
-    updateClearHOFButton();
+document.addEventListener("DOMContentLoaded", () => {
+  initUI();
+  loadHallOfFame();
+  updateClearHOFButton();
 
-    if (typeof jsQR === "undefined") {
-        console.warn("jsQR library not found — QR scanning disabled.");
-        if (el("cameraStatus")) el("cameraStatus").textContent = "jsQR tidak ditemui.";
+  const backBtn = document.getElementById("backHomeBtn");
+  if (backBtn && !backBtn.dataset.bound) {
+    backBtn.dataset.bound = "1";
+    backBtn.addEventListener("click", () => {
+      if (confirm("Keluar dan kembali ke Menu Utama?")) {
+        stopQuestionTimer?.();
+        stopCamera?.();
+        window.location.href = "../index.html";
+      }
+    });
+  }
+
+  if (typeof jsQR === "undefined") {
+    console.warn("jsQR library not found — QR scanning disabled.");
+    if (el("cameraStatus")) {
+      el("cameraStatus").textContent = "jsQR tidak ditemui.";
     }
+  }
 });
-
-/* End of file */

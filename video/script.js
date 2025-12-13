@@ -98,6 +98,7 @@ const saveHOFBtn = document.getElementById("saveHOFBtn");
 const clearHOFBtn = document.getElementById("clearHOFBtn");
 const HOF_KEY = "hof_video";
 
+
 /* =====================
    FULLSCREEN HANDLER
    ===================== */

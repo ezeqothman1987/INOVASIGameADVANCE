@@ -262,6 +262,25 @@ body {
 .clear-hof-btn:hover {
     background: #ff6666;
 }
+/* =====================
+   CONFETTI
+   ===================== */
+.confetti {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background-color: red;
+  top: -10px;
+  z-index: 9999;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
 
 /* ============================================================
    FOOTER INFO BAR (UNDER BUTTON PANEL)

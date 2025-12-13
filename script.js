@@ -63,7 +63,7 @@ function loadVideoHOF() {
     li.innerHTML = `
       <strong>${i + 1}. ${r.name}</strong>
       <div class="hof-sub">
-        1P ${r.scoreP1} &nbsp; | &nbsp; 2P ${r.scoreP2}
+         ${r.scoreP1} &nbsp; markah | &nbsp; ${r.scoreP2} markah
       </div>
     `;
     list.appendChild(li);

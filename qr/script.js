@@ -54,6 +54,7 @@ if (canvas) {
         ctx = canvas.getContext && canvas.getContext("2d");
     }
 }
+const endModal = el("endModal");
 
 /* =========================
    3) STATE
@@ -68,6 +69,7 @@ let questionInterval = null;
 let pausedUntilNextQR = false; // when true, timer won't decrement
 let qrDebounce = false;        // short frame debounce
 let isCooldown = false;        // longer cooldown (?s) after scan to prevent reprocessing
+let hofSaved = false;
 
 /* =========================
    4) UI init & event hooks
@@ -126,6 +128,7 @@ function startGame() {
     pausedUntilNextQR = false;
     qrDebounce = false;
     isCooldown = false;
+    hofSaved = false;
 
     setText("score","0");
     setText("timer", String(ROUND_TIME));
@@ -153,6 +156,7 @@ function resetGame() {
     pausedUntilNextQR = false;
     isCooldown = false;
     qrDebounce = false;
+    hofSaved = false;
 
     setText("score","0");
     setText("timer", String(ROUND_TIME));
@@ -373,7 +377,6 @@ function endGame(){
 
     setTextAll("finalScore", String(score));
 
-    const endModal = el("endModal");
     if (endModal) endModal.style.display = "block";
 
     const hofScreen = el("hallOfFameScreen");
@@ -381,6 +384,8 @@ function endGame(){
 }
 
 function saveHallOfFame() {
+  if (hofSaved) return;
+  hofSaved = true;
   const nameInput = document.getElementById("playerName");
   const name = nameInput?.value.trim() || "Tanpa Nama";
 
@@ -475,10 +480,21 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+const clearHOFBtn = document.getElementById("clearHOFBtn");
+
+if (clearHOFBtn) {
+  clearHOFBtn.addEventListener("click", resetHallOfFame);
+}
+
 function resetHallOfFame() {
   if (!confirm("Padam semua rekod Hall of Fame?")) return;
   localStorage.removeItem(HOF_KEY);
   loadHallOfFame();
+  updateClearHOFButton();
+}
+function updateClearHOFButton() {
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
+  clearHOFBtn.disabled = hof.length === 0;
 }
 
 
@@ -569,6 +585,7 @@ async function connectArduinoSerial() {
 document.addEventListener("DOMContentLoaded", ()=> {
     initUI();
     loadHallOfFame();
+    updateClearHOFButton();
 
     if (typeof jsQR === "undefined") {
         console.warn("jsQR library not found — QR scanning disabled.");

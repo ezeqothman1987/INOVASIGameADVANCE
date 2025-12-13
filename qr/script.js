@@ -587,17 +587,20 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHallOfFame();
   updateClearHOFButton();
 
-  const backBtn = document.getElementById("backHomeBtn");
-  if (backBtn && !backBtn.dataset.bound) {
-    backBtn.dataset.bound = "1";
-    backBtn.addEventListener("click", () => {
-      if (confirm("Keluar dan kembali ke Menu Utama?")) {
-        stopQuestionTimer?.();
-        stopCamera?.();
-        window.location.href = "../index.html";
-      }
-    });
-  }
+const backBtn = document.getElementById("backHomeBtn");
+
+if (backBtn && !backBtn.dataset.bound) {
+  backBtn.dataset.bound = "1";
+  backBtn.addEventListener("click", () => {
+    if (confirm("Keluar dan kembali ke Menu Utama?")) {
+      stopQuestionTimer?.();
+      stopCamera?.();
+      stopVideo?.();
+      stopTimer?.();
+      window.location.href = "../index.html";
+    }
+  });
+}
 
   if (typeof jsQR === "undefined") {
     console.warn("jsQR library not found — QR scanning disabled.");

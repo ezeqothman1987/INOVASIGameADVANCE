@@ -407,7 +407,7 @@ if (rank >= 0 && rank < 3) {
   debugLog("🎉 TOP 3!", { rank: rank + 1 });
   launchConfetti();
 }
-localStorage.setItem("HOF_KEY", JSON.stringify(hof.slice(0, 10)));
+localStorage.setItem(HOF_KEY, JSON.stringify(hof.slice(0, 10)));
 
   loadHallOfFame();
   debugLog("HOF saved", record);

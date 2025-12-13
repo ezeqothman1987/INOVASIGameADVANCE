@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     if (btn) {
         btn.addEventListener("click", ()=>{
             if (confirm("Padam semua rekod Hall of Fame?")) {
-                localStorage.removeItem("hof");
+                localStorage.removeItem("HOF_KEY");
                 if (typeof loadHallOfFame === "function") loadHallOfFame();
             }
         });

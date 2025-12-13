@@ -491,15 +491,18 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHallOfFame();
   initDebugOverlay();
 
-  const backBtn = document.getElementById("backHomeBtn");
-  if (backBtn && !backBtn.dataset.bound) {
-    backBtn.dataset.bound = "1";
-    backBtn.addEventListener("click", () => {
-      if (confirm("Keluar dan kembali ke Menu Utama?")) {
-        stopVideo?.();
-        stopTimer?.();
-        window.location.href = "../index.html";
-      }
-    });
-  }
+const backBtn = document.getElementById("backHomeBtn");
+
+if (backBtn && !backBtn.dataset.bound) {
+  backBtn.dataset.bound = "1";
+  backBtn.addEventListener("click", () => {
+    if (confirm("Keluar dan kembali ke Menu Utama?")) {
+      stopQuestionTimer?.();
+      stopCamera?.();
+      stopVideo?.();
+      stopTimer?.();
+      window.location.href = "../index.html";
+    }
+  });
+}
 });

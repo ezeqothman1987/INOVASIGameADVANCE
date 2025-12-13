@@ -62,7 +62,9 @@ function loadVideoHOF() {
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${i + 1}. ${r.name}</strong>
-      <span>Jumlah: ${r.total}</span>
+      <div class="hof-sub">
+        1P ${r.scoreP1} &nbsp; | &nbsp; 2P ${r.scoreP2}
+      </div>
     `;
     list.appendChild(li);
   });

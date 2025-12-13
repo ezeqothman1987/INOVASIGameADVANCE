@@ -96,6 +96,7 @@ const finalScoreP2El = document.getElementById("finalScoreP2");
 const restartBtn = document.getElementById("restartBtn");
 const saveHOFBtn = document.getElementById("saveHOFBtn");
 const clearHOFBtn = document.getElementById("clearHOFBtn");
+const HOF_KEY = "hof_video";
 
 /* =====================
    FULLSCREEN HANDLER
@@ -389,7 +390,7 @@ function saveHallOfFame() {
     isNew: true
   };
 
-  const hof = JSON.parse(localStorage.getItem("hof") || "[]");
+  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
   hof.forEach(r => r.isNew = false);
   hof.push(record);
 hof.sort((a, b) => b.total - a.total);
@@ -400,7 +401,7 @@ if (rank >= 0 && rank < 3) {
   debugLog("🎉 TOP 3!", { rank: rank + 1 });
   launchConfetti();
 }
-localStorage.setItem("hof", JSON.stringify(hof.slice(0, 10)));
+localStorage.setItem("HOF_KEY", JSON.stringify(hof.slice(0, 10)));
 
   loadHallOfFame();
   debugLog("HOF saved", record);
@@ -450,12 +451,12 @@ if (clearHOFBtn) {
 }
 function resetHallOfFame() {
   if (!confirm("Anda pasti mahu padam Hall of Fame?")) return;
-  localStorage.removeItem("hof");
+  localStorage.removeItem("HOF_KEY");
   loadHallOfFame();
   debugLog("HALL OF FAME RESET");
 }
 function updateClearHOFButton() {
-  const hof = JSON.parse(localStorage.getItem("hof") || "[]");
+  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
   clearHOFBtn.disabled = hof.length === 0;
 }
 //load hof
@@ -463,7 +464,7 @@ function loadHallOfFame() {
   const list = document.getElementById("hofList");
   if (!list) return;
 
-  const hof = JSON.parse(localStorage.getItem("hof") || "[]");
+  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
   list.innerHTML = "";
 
   hof.forEach((r, i) => {

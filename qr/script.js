@@ -392,7 +392,7 @@ function saveHallOfFame(){
     const name = (nameInput.value || "").trim();
     if (!name) { alert("Sila isi nama."); return; }
 
-    let hof = JSON.parse(localStorage.getItem("hof") || "[]");
+    let hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
     const now = new Date();
     hof.push({
         name,
@@ -407,7 +407,7 @@ function saveHallOfFame(){
     });
 
     hof = hof.slice(0,10);
-    localStorage.setItem("hof", JSON.stringify(hof));
+    localStorage.setItem("HOF_KEY", JSON.stringify(hof));
 
     loadHallOfFame();
 
@@ -423,7 +423,7 @@ function loadHallOfFame() {
     if (!hofList) return;
     hofList.innerHTML = "";
 
-    let hof = JSON.parse(localStorage.getItem("hof") || "[]");
+    let hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
 
     // Susun ikut markah → kemudian ikut timestamp (bukan string time)
     hof.sort((a, b) => {

@@ -9,27 +9,51 @@
 </head>
 <body>
 
-  <div class="container">
-    <h1 class="title">🪨 GEOQUIZ JMG 🪨</h1>
-    <p class="subtitle">Sila pilih mod permainan</p>
+<div class="container">
 
-    <div class="menu">
-      <button class="menu-btn qr" onclick="goQR()">
-        📷 GeoQuiz QR<br>
-        <span>Mod Kiosk / Individu</span>
-      </button>
+  <h1 class="title">🪨 GEOQUIZ JMG 🪨</h1>
+  <p class="subtitle">Menu Utama & Hall of Fame</p>
 
-      <button class="menu-btn video" onclick="goVideo()">
-        🎮 GeoQuiz 2 Pemain<br>
-        <span>Mod Event / Video</span>
-      </button>
-    </div>
+  <!-- =======================
+       HALL OF FAME SECTION
+       ======================= -->
+  <div class="hof-wrapper">
 
-    <footer class="footer">
-      © GEOQUIZ JMG – Menu Utama
-    </footer>
+    <!-- QR HOF -->
+    <section class="hof-box">
+      <h2>🏆GEOQUIZ QR</h2>
+      <ul id="hofQR" class="hof-list"></ul>
+    </section>
+
+    <!-- VIDEO HOF -->
+    <section class="hof-box">
+      <h2>🏆GEOQUIZ 2P BATTLE</h2>
+      <ul id="hofVideo" class="hof-list"></ul>
+    </section>
+
   </div>
 
-  <script src="script.js"></script>
+  <!-- =======================
+       MENU BUTTONS
+       ======================= -->
+  <div class="menu">
+    <button class="menu-btn qr" onclick="goQR()">
+      📷 GeoQuiz QR
+      <span>Mod Individu</span>
+    </button>
+
+    <button class="menu-btn video" onclick="goVideo()">
+      🎮 GeoQuiz 2p Battle
+      <span>Mod Event</span>
+    </button>
+  </div>
+
+  <footer class="footer">
+    © GEOQUIZ JMG ver mebo1.0 – Menu Utama
+  </footer>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

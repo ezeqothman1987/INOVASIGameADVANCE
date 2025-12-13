@@ -23,7 +23,7 @@ import { initInputHandlers } from "./input.js";
 /* =====================
    DEBUG MODE(CHATGPT suruh untuk chek semua)
    ===================== */
-const DEBUG = true; //tukar false lepas debug
+const DEBUG = false; //tukar true/false  debug
 
 /* =====================
    DEBUG OVERLAY

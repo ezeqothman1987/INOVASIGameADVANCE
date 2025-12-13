@@ -115,12 +115,17 @@ if (fullscreenBtn) {
 /* =====================
    AUDIO EFFECT
    ===================== */
-const soundCorrect = new Audio("video/static/sound/correct.mp3");
-const soundWrong   = new Audio("video/static/sound/wrong.mp3");
+const AUDIO_PATH = "../static/sound/";
+
+const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
+const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
+
 function playSound(audio) {
   if (!audio) return;
-  audio.currentTime = 0;
-  audio.play().catch(() => {});
+  try {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  } catch(e) {}
 }
 
 /* =====================

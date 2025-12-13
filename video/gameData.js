@@ -5,15 +5,15 @@
 /* =================================================================
   DATA ROUND PERMAINAN (SOALAN KAT SINI, tambah kalau nak tambah round)
  format: 
- { image: "static/qr_images/gambar+soalan", correct: "jawapan betul A/B" },
+ { image: "static/images/gambar+soalan", correct: "jawapan betul A/B" },
   =========================*/
 export const ROUNDS = [
-  { image: "static/qr_images/gambar1.png", correct: "A" },
-  { image: "static/qr_images/gambar2.png", correct: "B" },
-  { image: "static/qr_images/gambar3.png", correct: "A" },
-  { image: "static/qr_images/gambar4.png", correct: "B" },
-  { image: "static/qr_images/gambar5.png", correct: "A" },
-  { image: "static/qr_images/gambar6.png", correct: "A" }
+  { image: "static/images/gambar1.png", correct: "A" },
+  { image: "static/images/gambar2.png", correct: "B" },
+  { image: "static/images/gambar3.png", correct: "A" },
+  { image: "static/images/gambar4.png", correct: "B" },
+  { image: "static/images/gambar5.png", correct: "A" },
+  { image: "static/images/gambar6.png", correct: "A" }
 ];
 
 // =========================

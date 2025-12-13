@@ -137,3 +137,46 @@ body {
     grid-template-columns: 1fr;
   }
 }
+.hof-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hof-list li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.hof-rank {
+  font-weight: bold;
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+.hof-name {
+  font-weight: 600;
+}
+
+.hof-score {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.hof-sub {
+  grid-column: 2 / span 2;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Top 3 highlight */
+.hof-list li:nth-child(1) { border-left: 5px solid gold; }
+.hof-list li:nth-child(2) { border-left: 5px solid silver; }
+.hof-list li:nth-child(3) { border-left: 5px solid #cd7f32; }

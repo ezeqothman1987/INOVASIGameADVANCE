@@ -587,20 +587,18 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHallOfFame();
   updateClearHOFButton();
 
-const backBtn = document.getElementById("backHomeBtn");
+  const backBtn = document.getElementById("backHomeBtn");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
 
-if (backBtn && !backBtn.dataset.bound) {
-  backBtn.dataset.bound = "1";
-  backBtn.addEventListener("click", () => {
-    if (confirm("Keluar dan kembali ke Menu Utama?")) {
+      // 🔒 Cleanup QR game dengan selamat
       stopQuestionTimer?.();
       stopCamera?.();
-      stopVideo?.();
-      stopTimer?.();
+
       window.location.href = "../index.html";
-    }
-  });
-}
+    });
+  }
 
   if (typeof jsQR === "undefined") {
     console.warn("jsQR library not found — QR scanning disabled.");
@@ -609,3 +607,4 @@ if (backBtn && !backBtn.dataset.bound) {
     }
   }
 });
+

@@ -114,8 +114,8 @@ if (fullscreenBtn) {
 /* =====================
    AUDIO EFFECT
    ===================== */
-const soundCorrect = new Audio("static/sound/correct.mp3");
-const soundWrong   = new Audio("static/sound/wrong.mp3");
+const soundCorrect = new Audio("video/static/sound/correct.mp3");
+const soundWrong   = new Audio("video/static/sound/wrong.mp3");
 function playSound(audio) {
   if (!audio) return;
   audio.currentTime = 0;

@@ -65,3 +65,13 @@ function loadVideoHOF() {
 }
 
 document.addEventListener("DOMContentLoaded", loadHOF);
+
+/* =========================
+   AUTO REFRESH MAIN PAGE
+========================= */
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    console.log("🔄 Page active again → refresh HOF");
+    loadHOF();
+  }
+});

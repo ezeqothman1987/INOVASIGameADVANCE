@@ -470,7 +470,7 @@ function loadHallOfFame() {
   const list = document.getElementById("hofList");
   if (!list) return;
 
-  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
   list.innerHTML = "";
 
   hof.forEach((r, i) => {

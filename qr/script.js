@@ -380,87 +380,74 @@ function endGame(){
     if (hofScreen) hofScreen.style.display = "block";
 }
 
-function saveHallOfFame(){
-    let nameInput = document.querySelector("#hallOfFameScreen #playerName") ||
-                    document.querySelector("#endModal #playerName") ||
-                    el("playerName");
+function saveHallOfFame() {
+  const nameInput = document.getElementById("playerName");
+  const name = nameInput?.value.trim() || "Tanpa Nama";
 
-    if (!nameInput) {
-        alert("Field nama tidak ditemui.");
-        return;
-    }
-    const name = (nameInput.value || "").trim();
-    if (!name) { alert("Sila isi nama."); return; }
+  const record = {
+    name,
+    score,
+    total: score,
+    ts: Date.now(),
+    isNew: true
+  };
 
-    let hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
-    const now = new Date();
-    hof.push({
-        name,
-        score,
-        ts: now.getTime(),
-        time: now.toLocaleString()
-    });
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
 
-    hof.sort((a,b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.ts - b.ts;
-    });
+  // Reset flag lama
+  hof.forEach(r => r.isNew = false);
 
-    hof = hof.slice(0,10);
-    localStorage.setItem("HOF_KEY", JSON.stringify(hof));
+  hof.push(record);
 
-    loadHallOfFame();
+  // Sort ikut total
+  hof.sort((a, b) => b.total - a.total);
 
-    const hofScreen = el("hallOfFameScreen"); if (hofScreen) hofScreen.style.display = "none";
-    const endModal = el("endModal"); if (endModal) endModal.style.display = "none";
+  // Semak TOP 3
+  const rank = hof.findIndex(r => r === record);
+  if (rank >= 0 && rank < 3) {
+    launchConfetti();
+  }
+
+  localStorage.setItem(HOF_KEY, JSON.stringify(hof.slice(0, 10)));
+
+  loadHallOfFame();
+
+  if (nameInput) nameInput.value = "";
 }
 
 /* ============================================================
    Hall of Fame — BORDER + ICON
 ============================================================ */
 function loadHallOfFame() {
-    const hofList = document.getElementById("hofList");
-    if (!hofList) return;
-    hofList.innerHTML = "";
+  const list = document.getElementById("hofList");
+  if (!list) return;
 
-    let hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
+  list.innerHTML = "";
 
-    // Susun ikut markah → kemudian ikut timestamp (bukan string time)
-    hof.sort((a, b) => {
-        if (b.score === a.score) return a.ts - b.ts;
-        return b.score - a.score;
-    });
+  hof.forEach((r, i) => {
+    const li = document.createElement("li");
+    li.classList.add("hof-item");
 
-    // Hadkan ke top 10
-    hof = hof.slice(0, 10);
+    if (i === 0) li.classList.add("gold");
+    else if (i === 1) li.classList.add("silver");
+    else if (i === 2) li.classList.add("bronze");
+    if (r.isNew) li.classList.add("hof-new");
 
-    hof.forEach((item, index) => {
-        let icon = "⭐";
-        if (index === 0) icon = "🥇";
-        else if (index === 1) icon = "🥈";
-        else if (index === 2) icon = "🥉";
+    const dt = new Date(r.ts);
+    const formatted =
+      dt.toLocaleDateString("ms-MY") + " " +
+      dt.toLocaleTimeString("ms-MY");
 
-        const li = document.createElement("li");
-        li.className = "hof-item";
+    li.innerHTML = `
+      <div class="hof-rank">${i + 1}</div>
+      <div class="hof-name">${r.name}</div>
+      <div class="hof-score">Markah: ${r.score}</div>
+      <div class="hof-date">📅 ${formatted}</div>
+    `;
 
-        // Format tarikh
-        let dt = new Date(item.ts);
-        let formatted =
-            dt.toLocaleDateString("ms-MY") +
-            " " +
-            dt.toLocaleTimeString("ms-MY");
-
-        li.innerHTML = `
-            <div class="hof-rank-icon">${icon}</div>
-            <div class="hof-details">
-                <span class="name">${item.name}</span>
-                <span class="score">Markah: ${item.score}</span>
-                <span class="time">📅 ${formatted}</span>
-            </div>
-        `;
-
-        hofList.appendChild(li);
-    });
+    list.appendChild(li);
+  });
 }
 
 

@@ -77,6 +77,7 @@ body {
 }
 
 #hofList {
+  margin-top: 60px; /* turunkan Hall of Fame */
   list-style: none;
   font-size: 14px;
 }

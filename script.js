@@ -54,7 +54,7 @@ function loadVideoHOF() {
     return;
   }
 
-  hof.slice(0, 5).forEach((r, i) => {
+  hof.slice(0, 3).forEach((r, i) => {
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${i + 1}. ${r.name}</strong>

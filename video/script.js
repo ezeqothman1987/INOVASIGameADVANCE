@@ -496,18 +496,21 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHallOfFame();
   initDebugOverlay();
 
-const backBtn = document.getElementById("backHomeBtn");
+  const backBtn = document.getElementById("backHomeBtn");
 
-if (backBtn && !backBtn.dataset.bound) {
-  backBtn.dataset.bound = "1";
-  backBtn.addEventListener("click", () => {
-    if (confirm("Keluar dan kembali ke Menu Utama?")) {
-      stopQuestionTimer?.();
-      stopCamera?.();
-      stopVideo?.();
-      stopTimer?.();
+  if (backBtn && !backBtn.dataset.bound) {
+    backBtn.dataset.bound = "1";
+
+    backBtn.addEventListener("click", () => {
+      if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
+
+      // 🛑 SAFE CLEANUP (tak akan error walaupun function tiada)
+      if (typeof stopGame === "function") stopGame();
+      if (typeof stopVideo === "function") stopVideo();
+      if (typeof stopCamera === "function") stopCamera();
+      if (typeof stopTimer === "function") stopTimer();
+
       window.location.href = "../index.html";
-    }
-  });
-}
+    });
+  }
 });

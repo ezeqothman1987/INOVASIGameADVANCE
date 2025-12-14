@@ -396,7 +396,7 @@ function saveHallOfFame() {
     isNew: true
   };
 
-  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
   hof.forEach(r => r.isNew = false);
   hof.push(record);
 hof.sort((a, b) => b.total - a.total);
@@ -457,12 +457,12 @@ if (clearHOFBtn) {
 }
 function resetHallOfFame() {
   if (!confirm("Anda pasti mahu padam Hall of Fame?")) return;
-  localStorage.removeItem("HOF_KEY");
+  localStorage.removeItem(HOF_KEY);
   loadHallOfFame();
   debugLog("HALL OF FAME RESET");
 }
 function updateClearHOFButton() {
-  const hof = JSON.parse(localStorage.getItem("HOF_KEY") || "[]");
+  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
   clearHOFBtn.disabled = hof.length === 0;
 }
 //load hof

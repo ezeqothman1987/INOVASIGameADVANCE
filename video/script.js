@@ -230,6 +230,7 @@ if (stopBtn) stopBtn.addEventListener("click", stopGame);
 
 function startGame() {
      debugLog("startGame()");
+   document.body.classList.add("game-started"); // 🔴 HIDE HOF
   scoreP1 = 0;
   scoreP2 = 0;
   currentRound = 1;
@@ -246,6 +247,7 @@ function startGame() {
 
 function stopGame() {
    debugLog("stopGame()");
+  document.body.classList.remove("game-started"); // 🟢 SHOW HOF
   gameActive = false;
   roundLocked = true;
   clearInterval(timerInterval);

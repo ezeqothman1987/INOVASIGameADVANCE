@@ -287,24 +287,26 @@ function flashScreen(color) {
 /* ============================================================
    BACK TO HOME HANDLER (SAFE)
 ============================================================ */
-function setupBackHomeButton() {
-  const backBtn = document.getElementById("backHomeBtn");
-  if (!backBtn || backBtn.dataset.bound) return;
 
+document.addEventListener("DOMContentLoaded", () => {
+  const backBtn = document.getElementById("backHomeBtn");
+  if (!backBtn) return;
+
+  // elak double bind
+  if (backBtn.dataset.bound) return;
   backBtn.dataset.bound = "1";
 
-backBtn.addEventListener("click", () => {
-  if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
+  backBtn.addEventListener("click", () => {
+    if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
 
-  // 🛑 SAFE CLEANUP (tak akan error walaupun function tiada)
-  if (typeof disconnectArduino === "function") disconnectArduino();
-  if (typeof stopCamera === "function") stopCamera();
-  if (typeof stopQuestionTimer === "function") stopQuestionTimer();
-  if (typeof resetGame === "function") resetGame();
+    if (typeof window.disconnectArduino === "function") window.disconnectArduino();
+    if (typeof window.stopCamera === "function") window.stopCamera();
+    if (typeof window.stopQuestionTimer === "function") window.stopQuestionTimer();
+    if (typeof window.resetGame === "function") window.resetGame();
 
-  window.location.href = "../index.html";
+    window.location.href = "../index.html";
+  });
 });
-}
 
 /* ============================================================
    15) HALL OF FAME (ANTI SALAH TEKAN + TOP 3 CONFETTI)

@@ -247,6 +247,31 @@ function flashScreen(color) {
   setTimeout(() =>
     document.body.classList.remove(`flash-${color}`), 400);
 }
+/* ============================================================
+   BACK TO HOME HANDLER (SAFE)
+============================================================ */
+function setupBackHomeButton() {
+  const backBtn = document.getElementById("backHomeBtn");
+  if (!backBtn || backBtn.dataset.bound) return;
+
+  backBtn.dataset.bound = "1";
+
+  backBtn.addEventListener("click", () => {
+    if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
+
+    try {
+      stopCamera();
+      stopQuestionTimer();
+      setGameState(GAME_STATE.IDLE);
+    } catch {}
+
+    // tutup modal kalau ada
+    el("endModal") && (el("endModal").style.display = "none");
+
+    // balik ke halaman utama
+    window.location.href = "../index.html";
+  });
+}
 
 /* ============================================================
    15) HALL OF FAME (ANTI SALAH TEKAN + TOP 3 CONFETTI)
@@ -291,29 +316,24 @@ function loadHallOfFame() {
 }
 
 /* ============================================================
-   16) RESET HOF (TEKAN & TAHAN)
+   16) RESET HOF
 ============================================================ */
-let holdTimer = null;
-
 function setupClearHOFButton() {
-  const btn = el("clearHOFBtn");
-  if (!btn) return;
+  const btn = document.getElementById("clearHOFBtn");
+  if (!btn || btn.dataset.bound) return;
 
-  btn.addEventListener("mousedown", () => {
-    btn.classList.add("holding");
-    holdTimer = setTimeout(() => {
-      localStorage.removeItem(HOF_QR_KEY);
-      loadHallOfFame();
-      btn.classList.remove("holding");
-    }, 3000);
+  btn.dataset.bound = "1";
+
+  btn.addEventListener("click", () => {
+    if (!confirm("Padam semua rekod Hall of Fame?")) return;
+
+    localStorage.removeItem(HOF_QR_KEY);
+    loadHallOfFame();
+
+    if (DEBUG_MODE) {
+      console.warn("[HOF] Semua rekod telah dipadam");
+    }
   });
-
-  ["mouseup","mouseleave","touchend"].forEach(e =>
-    btn.addEventListener(e, () => {
-      clearTimeout(holdTimer);
-      btn.classList.remove("holding");
-    })
-  );
 }
 
 /* ============================================================

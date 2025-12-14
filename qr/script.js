@@ -168,6 +168,8 @@ function startGame() {
 
   sendToESP32("GAME:START");
   resetGame();
+  // AUTO HIDE HALL OF FAME (KIOSK MODE)
+  document.body.classList.add("game-started");
 
   setGameState(GAME_STATE.SCANNING);
   setText("rockName", UI_TEXT.SCANNING);
@@ -270,6 +272,9 @@ function endGame(isWin = false) {
   stopCamera();
   stopQuestionTimer();
   setGameState(GAME_STATE.END);
+
+     //SHOW BACK HALL OF FAME (GAME ENDED)
+  document.body.classList.remove("game-started");
 
   setTextAll("finalScore", score);
   el("endModal").style.display = "block";

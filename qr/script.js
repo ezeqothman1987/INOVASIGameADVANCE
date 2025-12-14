@@ -277,21 +277,42 @@ function setupBackHomeButton() {
    15) HALL OF FAME (ANTI SALAH TEKAN + TOP 3 CONFETTI)
 ============================================================ */
 function saveHallOfFame() {
-  const name = el("playerName").value.trim() || "Tanpa Nama";
+const name =
+    document.getElementById("playerName")?.value.trim() || "Tanpa Nama";
+
+  const record = {
+    name,
+    score,
+    ts: Date.now()
+  };
 
   const hof = JSON.parse(localStorage.getItem(HOF_QR_KEY) || "[]");
-  hof.push({ name, score, ts: Date.now() });
-  hof.sort((a, b) => b.score - a.score);
+  hof.push(record);
 
-  const rank = hof.findIndex(r => r.score === score);
-  localStorage.setItem(HOF_QR_KEY, JSON.stringify(hof.slice(0, HOF_MAX)));
+  // Susun ikut markah tertinggi
+  hof.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+
+  // Simpan maksimum
+  localStorage.setItem(
+    HOF_QR_KEY,
+    JSON.stringify(hof.slice(0, HOF_MAX))
+  );
+
+  // Cari ranking pemain baru
+  const rank = hof.findIndex(
+    r => r.ts === record.ts
+  ) + 1;
 
   loadHallOfFame();
 
-  if (rank >= 0 && rank < 3) launchConfetti();
+  // CONFETTI JIKA TOP 3
+  if (rank > 0 && rank <= 3) {
+    launchConfettiTop3();
+  }
 
-  el("playerName").value = "";
-  el("endModal").style.display = "none";
+  // Reset UI
+  document.getElementById("playerName").value = "";
+  document.getElementById("endModal").style.display = "none";
 
   resetGame();
   setGameState(GAME_STATE.IDLE);
@@ -314,7 +335,27 @@ function loadHallOfFame() {
     list.appendChild(li);
   });
 }
+function launchConfettiTop3() {
+  const colors = ["#ffd700", "#c0c0c0", "#cd7f32", "#7CFC00", "#00ffff"];
 
+  for (let i = 0; i < 80; i++) {
+    const conf = document.createElement("div");
+    conf.className = "confetti";
+
+    conf.style.left = Math.random() * 100 + "vw";
+    conf.style.backgroundColor =
+      colors[Math.floor(Math.random() * colors.length)];
+
+    conf.style.animationDuration =
+      2 + Math.random() * 2 + "s";
+
+    conf.style.opacity = Math.random();
+
+    document.body.appendChild(conf);
+
+    setTimeout(() => conf.remove(), 4000);
+  }
+}
 /* ============================================================
    16) RESET HOF
 ============================================================ */

@@ -3,6 +3,13 @@
    ------------------------------------------------------------
    ENGINE GAME + UI + CAMERA + HALL OF FAME
 ============================================================ */
+/* ============================================================
+   0) SERIAL STATE
+============================================================ */
+let serialPort = null;
+let serialWriter = null;
+let serialReader = null;
+let serialConnected = false;
 
 /* ============================================================
    1) AUDIO
@@ -77,6 +84,10 @@ let scanning = false;
 let qrDebounce = false;
 
 async function startCamera() {
+     if (DEBUG_MODE) {
+    console.warn("DEBUG MODE: Kamera dimatikan");
+    return;
+  }
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" }
   });
@@ -123,6 +134,13 @@ function scanLoop() {
   requestAnimationFrame(scanLoop);
 }
 
+function updateScanUI() {
+  document.body.classList.remove("scanning");
+
+  if (gameState === GAME_STATE.SCANNING) {
+    document.body.classList.add("scanning");
+  }
+}
 
 /* ============================================================
    6) GAME FLOW FUNCTIONS
@@ -142,6 +160,7 @@ function resetGame() {
 }
 
 function startGame() {
+   sendToESP32("GAME:START");
   resetGame();
 
   gameState = GAME_STATE.SCANNING;
@@ -224,6 +243,7 @@ function playerAnswer(answer) {
 ============================================================ */
 
 function handleCorrectAnswer() {
+  sendToESP32("LED:GREEN");
   stopQuestionTimer();
   safePlay(soundCorrect);
 
@@ -257,6 +277,7 @@ function handleCorrectAnswer() {
 ============================================================ */
 
 function handleWrongAnswer() {
+  sendToESP32("LED:RED");
   stopQuestionTimer();
   safePlay(soundWrong);
 
@@ -269,7 +290,8 @@ function handleWrongAnswer() {
    12) MENANG (CUKUP ROUND)
 ============================================================ */
 
-function handleGameWin() {
+function handleGameWin() 
+  sendToESP32("LED:GOLD");
   gameState = GAME_STATE.END;
 
   safePlay(soundCongrats);
@@ -284,7 +306,8 @@ function handleGameWin() {
    13) END GAME → IDLE
 ============================================================ */
 
-function endGame() {
+function endGame() 
+  sendToESP32("GAME:END");
   stopCamera();
   stopQuestionTimer();
 
@@ -310,10 +333,105 @@ function flashScreen(color) {
     document.body.classList.remove("flash-green", "flash-red", "flash-gold");
   }, 400);
 }
+/* ============================================================
+   16) HALL OF FAME
+============================================================ */
+function savePlayerName() {
+  const nameInput = el("playerName");
+  const name = nameInput.value.trim() || "Tanpa Nama";
 
+  const record = {
+    name,
+    score,
+    date: new Date().toLocaleDateString()
+  };
+
+  const hof = JSON.parse(localStorage.getItem("hof_QR") || "[]");
+  hof.push(record);
+
+  hof.sort((a, b) => b.score - a.score);
+  localStorage.setItem("hallOfFame", JSON.stringify(hof.slice(0, 10)));
+
+  updateHallOfFameUI();
+
+  // RESET KE IDLE
+  nameInput.value = "";
+  el("endModal").style.display = "none";
+
+  resetGame();
+  gameState = GAME_STATE.IDLE;
+
+  setText("rockName", UI_TEXT.IDLE);
+}
+/* ============================================================
+   16) STATUS CONTROLR
+============================================================ */
+async function connectArduino() {
+  try {
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 115200 });
+
+    serialWriter = serialPort.writable.getWriter();
+    serialReader = serialPort.readable.getReader();
+
+    serialConnected = true;
+    updateSerialStatus();
+
+    readSerialLoop();
+  } catch (e) {
+    console.error("Serial error:", e);
+  }
+}
+
+async function disconnectArduino() {
+  serialConnected = false;
+
+  try {
+    await serialReader?.cancel();
+    await serialWriter?.close();
+    await serialPort?.close();
+  } catch {}
+
+  serialPort = null;
+  updateSerialStatus();
+}
+
+function updateSerialStatus() {
+  el("serialStatus").textContent = serialConnected
+    ? "CONNECTED"
+    : "DISCONNECTED";
+}
+async function readSerialLoop() {
+  const decoder = new TextDecoder();
+
+  while (serialConnected) {
+    try {
+      const { value, done } = await serialReader.read();
+      if (done) break;
+
+      const msg = decoder.decode(value).trim();
+      handleSerialInput(msg);
+    } catch {
+      break;
+    }
+  }
+}
+function handleSerialInput(msg) {
+  if (gameState !== GAME_STATE.ANSWERING) return;
+
+  if (msg === "BTN:1") playerAnswer("betul");
+  if (msg === "BTN:2") playerAnswer("salah");
+}
+
+function sendToESP32(message) {
+  if (!serialConnected || !serialWriter) return;
+
+  const encoder = new TextEncoder();
+  serialWriter.write(encoder.encode(message + "\n"));
+}
 
 /* ============================================================
-   15) INIT
+   17) INIT
 ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -323,4 +441,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setText("rockName", UI_TEXT.IDLE);
   setText("timer", GAME_CONFIG.ANSWER_TIME);
+document.addEventListener("keydown", (e) => {
+  if (!DEBUG_MODE) return;
+
+  if (e.key === "b" && gameState === GAME_STATE.SCANNING) {
+    onQRScanned(QR_PAYLOAD.BETUL);
+  }
+
+  if (e.key === "s" && gameState === GAME_STATE.SCANNING) {
+    onQRScanned(QR_PAYLOAD.SALAH);
+  }
+});
 });

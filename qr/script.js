@@ -293,21 +293,17 @@ function setupBackHomeButton() {
 
   backBtn.dataset.bound = "1";
 
-  backBtn.addEventListener("click", () => {
-    if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
+backBtn.addEventListener("click", () => {
+  if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
 
-    try {
-      stopCamera();
-      stopQuestionTimer();
-      setGameState(GAME_STATE.IDLE);
-    } catch {}
+  // 🛑 SAFE CLEANUP (tak akan error walaupun function tiada)
+  if (typeof disconnectArduino === "function") disconnectArduino();
+  if (typeof stopCamera === "function") stopCamera();
+  if (typeof stopQuestionTimer === "function") stopQuestionTimer();
+  if (typeof resetGame === "function") resetGame();
 
-    // tutup modal kalau ada
-    el("endModal") && (el("endModal").style.display = "none");
-
-    // balik ke halaman utama
-    window.location.href = "../index.html";
-  });
+  window.location.href = "../index.html";
+});
 }
 
 /* ============================================================

@@ -1,10 +1,5 @@
 /* ============================================================
-   script.js — ENGINE GAME (FINAL, STABLE)
-   ------------------------------------------------------------
-   Bergantung kepada:
-   - jsQR.js
-   - gameData.js (GAME_CONFIG, UI_TEXT, AUDIO, DEBUG_MODE, dll)
-   - input.js (controller)
+   script.js — ENGINE GAME (FINAL, CLEAN, STABLE)
 ============================================================ */
 
 /* ============================================================
@@ -18,31 +13,24 @@ let serialConnected = false;
 /* ============================================================
    1) AUDIO
 ============================================================ */
-const soundCorrect   = new Audio(GAME_AUDIO.CORRECT);
-const soundWrong     = new Audio(GAME_AUDIO.WRONG);
-const soundCongrats  = new Audio(GAME_AUDIO.CONGRATS);
-const soundCountdown = new Audio(GAME_AUDIO.COUNTDOWN);
+const soundCorrect  = new Audio(GAME_AUDIO.CORRECT);
+const soundWrong    = new Audio(GAME_AUDIO.WRONG);
+const soundCongrats = new Audio(GAME_AUDIO.CONGRATS);
 
-function safePlay(audio) {
+function safePlay(a) {
   try {
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    a.currentTime = 0;
+    a.play().catch(() => {});
   } catch {}
 }
 
 /* ============================================================
    2) DOM HELPER
 ============================================================ */
-function el(id) {
-  return document.getElementById(id);
-}
-function setText(id, txt) {
-  const n = el(id);
-  if (n) n.textContent = txt;
-}
-function setTextAll(id, txt) {
+const el = id => document.getElementById(id);
+const setText = (id, txt) => el(id) && (el(id).textContent = txt);
+const setTextAll = (id, txt) =>
   document.querySelectorAll(`#${id}`).forEach(n => n.textContent = txt);
-}
 
 /* ============================================================
    3) GAME STATE MACHINE
@@ -56,11 +44,10 @@ const GAME_STATE = {
 };
 
 let gameState = GAME_STATE.IDLE;
-
-function setGameState(state) {
-  gameState = state;
-  if (DEBUG_MODE) console.log("[STATE]", state);
-}
+const setGameState = s => {
+  gameState = s;
+  DEBUG_MODE && console.log("[STATE]", s);
+};
 
 /* ============================================================
    4) GAME DATA
@@ -74,18 +61,15 @@ let timerInterval = null;
 /* ============================================================
    5) CAMERA & QR
 ============================================================ */
-const video  = el("video");
+const video = el("video");
 const canvas = el("qr-canvas");
-const ctx    = canvas?.getContext("2d");
+const ctx = canvas?.getContext("2d");
 
 let scanning = false;
 let qrDebounce = false;
 
 async function startCamera() {
-  if (DEBUG_MODE) {
-    console.warn("[DEBUG] Kamera dimatikan");
-    return;
-  }
+  if (DEBUG_MODE) return console.warn("[DEBUG] Kamera OFF");
 
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" }
@@ -100,26 +84,26 @@ async function startCamera() {
 }
 
 function stopCamera() {
-  if (video?.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
+  video?.srcObject?.getTracks().forEach(t => t.stop());
+  video.srcObject = null;
   scanning = false;
 }
 
 function scanLoop() {
-  if (!scanning) return;
+  if (!scanning || gameState !== GAME_STATE.SCANNING) {
+    requestAnimationFrame(scanLoop);
+    return;
+  }
 
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width  = video.videoWidth;
+    canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(img.data, canvas.width, canvas.height);
 
-    if (code && gameState === GAME_STATE.SCANNING && !qrDebounce) {
+    if (code && !qrDebounce) {
       qrDebounce = true;
       setTimeout(() => qrDebounce = false, 1200);
       onQRScanned(code.data);
@@ -135,8 +119,6 @@ function resetGame() {
   roundCount = 0;
   score = 0;
   lastQR = null;
-  timeRemaining = 0;
-
   stopQuestionTimer();
 
   setText("score", "0");
@@ -152,10 +134,7 @@ function startGame() {
 
   setGameState(GAME_STATE.SCANNING);
   setText("rockName", UI_TEXT.SCANNING);
-
-  el("cameraStatus") &&
-    (el("cameraStatus").textContent =
-      DEBUG_MODE ? "[DEBUG] SIMULASI QR" : UI_TEXT.SCANNING);
+  el("cameraStatus") && (el("cameraStatus").textContent = UI_TEXT.SCANNING);
 
   startCamera();
 }
@@ -164,13 +143,13 @@ function startGame() {
    7) QR SCANNED
 ============================================================ */
 function onQRScanned(payload) {
-  const txt = payload.trim().toLowerCase();
-  if (txt !== QR_PAYLOAD.BETUL && txt !== QR_PAYLOAD.SALAH) return;
+  const t = payload.trim().toLowerCase();
+  if (t !== QR_PAYLOAD.BETUL && t !== QR_PAYLOAD.SALAH) return;
 
-  lastQR = txt;
-  setGameState(GAME_STATE.ANSWERING);
-
+  lastQR = t;
   timeRemaining = GAME_CONFIG.ANSWER_TIME;
+
+  setGameState(GAME_STATE.ANSWERING);
   setText("timer", timeRemaining);
   setText("rockName", UI_TEXT.ANSWER);
 
@@ -182,39 +161,31 @@ function onQRScanned(payload) {
 ============================================================ */
 function startQuestionTimer() {
   stopQuestionTimer();
-
   timerInterval = setInterval(() => {
     if (gameState !== GAME_STATE.ANSWERING) return;
-
     timeRemaining--;
     setText("timer", timeRemaining);
-
-    if (timeRemaining <= 0) {
-      handleWrongAnswer();
-    }
+    if (timeRemaining <= 0) handleWrongAnswer();
   }, 1000);
 }
 
 function stopQuestionTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
+  clearInterval(timerInterval);
+  timerInterval = null;
 }
 
 /* ============================================================
-   9) PLAYER ANSWER (DARI input.js)
+   9) ANSWER
 ============================================================ */
-function playerAnswer(answer) {
+function playerAnswer(ans) {
   if (gameState !== GAME_STATE.ANSWERING) return;
-  answer === lastQR ? handleCorrectAnswer() : handleWrongAnswer();
+  ans === lastQR ? handleCorrectAnswer() : handleWrongAnswer();
 }
 
 /* ============================================================
    10) BETUL
 ============================================================ */
 function handleCorrectAnswer() {
-  sendToESP32("LED:GREEN");
   stopQuestionTimer();
   safePlay(soundCorrect);
   flashScreen("green");
@@ -240,7 +211,6 @@ function handleCorrectAnswer() {
    11) SALAH
 ============================================================ */
 function handleWrongAnswer() {
-  sendToESP32("LED:RED");
   stopQuestionTimer();
   safePlay(soundWrong);
   flashScreen("red");
@@ -251,27 +221,20 @@ function handleWrongAnswer() {
    12) MENANG
 ============================================================ */
 function handleGameWin() {
-  sendToESP32("LED:GOLD");
-  setGameState(GAME_STATE.END);
-
   safePlay(soundCongrats);
   flashScreen("gold");
-  launchConfetti();
-
-  endGame();
+  endGame(true);
 }
 
 /* ============================================================
    13) END GAME
 ============================================================ */
-function endGame() {
-  sendToESP32("GAME:END");
+function endGame(isWin = false) {
   stopCamera();
   stopQuestionTimer();
-
   setGameState(GAME_STATE.END);
-  setTextAll("finalScore", score);
 
+  setTextAll("finalScore", score);
   el("endModal").style.display = "block";
 }
 
@@ -279,32 +242,28 @@ function endGame() {
    14) VISUAL
 ============================================================ */
 function flashScreen(color) {
-  document.body.classList.remove("flash-green", "flash-red", "flash-gold");
+  document.body.classList.remove("flash-green","flash-red","flash-gold");
   document.body.classList.add(`flash-${color}`);
-
-  setTimeout(() => {
-    document.body.classList.remove(`flash-${color}`);
-  }, 400);
+  setTimeout(() =>
+    document.body.classList.remove(`flash-${color}`), 400);
 }
 
 /* ============================================================
-   15) HALL OF FAME (LOCAL STORAGE)
+   15) HALL OF FAME (ANTI SALAH TEKAN + TOP 3 CONFETTI)
 ============================================================ */
-function savePlayerName() {
+function saveHallOfFame() {
   const name = el("playerName").value.trim() || "Tanpa Nama";
 
-  const record = {
-    name,
-    score,
-    date: new Date().toLocaleDateString()
-  };
-
   const hof = JSON.parse(localStorage.getItem(HOF_QR_KEY) || "[]");
-  hof.push(record);
+  hof.push({ name, score, ts: Date.now() });
   hof.sort((a, b) => b.score - a.score);
 
-  localStorage.setItem(HOF_QR_KEY, JSON.stringify(hof.slice(0, 10)));
-  updateHallOfFameUI();
+  const rank = hof.findIndex(r => r.score === score);
+  localStorage.setItem(HOF_QR_KEY, JSON.stringify(hof.slice(0, HOF_MAX)));
+
+  loadHallOfFame();
+
+  if (rank >= 0 && rank < 3) launchConfetti();
 
   el("playerName").value = "";
   el("endModal").style.display = "none";
@@ -313,74 +272,82 @@ function savePlayerName() {
   setGameState(GAME_STATE.IDLE);
 }
 
+function loadHallOfFame() {
+  const list = el("hofList");
+  if (!list) return;
+
+  const hof = JSON.parse(localStorage.getItem(HOF_QR_KEY) || "[]");
+  list.innerHTML = "";
+
+  hof.forEach((r, i) => {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+    li.innerHTML = `
+      <span class="rank">#${i + 1}</span>
+      <span class="name">${r.name}</span>
+      <span class="score">${r.score}</span>`;
+    list.appendChild(li);
+  });
+}
+
 /* ============================================================
-   16) SERIAL (ESP32)
+   16) RESET HOF (TEKAN & TAHAN)
 ============================================================ */
-async function connectArduino() {
-  try {
-    serialPort = await navigator.serial.requestPort();
-    await serialPort.open({ baudRate: 115200 });
+let holdTimer = null;
 
-    serialWriter = serialPort.writable.getWriter();
-    serialReader = serialPort.readable.getReader();
+function setupClearHOFButton() {
+  const btn = el("clearHOFBtn");
+  if (!btn) return;
 
-    serialConnected = true;
-    updateSerialStatus();
-    readSerialLoop();
-  } catch (e) {
-    console.error("Serial error:", e);
-  }
-}
+  btn.addEventListener("mousedown", () => {
+    btn.classList.add("holding");
+    holdTimer = setTimeout(() => {
+      localStorage.removeItem(HOF_QR_KEY);
+      loadHallOfFame();
+      btn.classList.remove("holding");
+    }, 3000);
+  });
 
-async function disconnectArduino() {
-  serialConnected = false;
-  try {
-    await serialReader?.cancel();
-    await serialWriter?.close();
-    await serialPort?.close();
-  } catch {}
-  updateSerialStatus();
-}
-
-function updateSerialStatus() {
-  el("serialStatus").textContent =
-    serialConnected ? "CONNECTED" : "DISCONNECTED";
-}
-
-async function readSerialLoop() {
-  const decoder = new TextDecoder();
-  while (serialConnected) {
-    const { value, done } = await serialReader.read();
-    if (done) break;
-    handleSerialInput(decoder.decode(value).trim());
-  }
-}
-
-function handleSerialInput(msg) {
-  if (gameState !== GAME_STATE.ANSWERING) return;
-  if (msg === "BTN:1") playerAnswer(QR_PAYLOAD.BETUL);
-  if (msg === "BTN:2") playerAnswer(QR_PAYLOAD.SALAH);
-}
-
-function sendToESP32(message) {
-  if (!serialConnected || !serialWriter) return;
-  serialWriter.write(new TextEncoder().encode(message + "\n"));
+  ["mouseup","mouseleave","touchend"].forEach(e =>
+    btn.addEventListener(e, () => {
+      clearTimeout(holdTimer);
+      btn.classList.remove("holding");
+    })
+  );
 }
 
 /* ============================================================
-   17) INIT
+   17) CONFETTI
+============================================================ */
+function launchConfetti(count = 120) {
+  for (let i = 0; i < count; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background =
+      ["#FFD700","#FF5733","#33FF57","#3399FF"]
+      [Math.floor(Math.random()*4)];
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4000);
+  }
+}
+
+/* ============================================================
+   18) INIT
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-  el("startBtn")?.addEventListener("click", startGame);
-
+  el("startScanBtn")?.addEventListener("click", startGame);
+  setupClearHOFButton();
+  loadHallOfFame();
   setText("rockName", UI_TEXT.IDLE);
   setText("timer", GAME_CONFIG.ANSWER_TIME);
 
   if (DEBUG_MODE) {
     document.addEventListener("keydown", e => {
-      if (gameState !== GAME_STATE.SCANNING) return;
-      if (e.key === "b") onQRScanned(QR_PAYLOAD.BETUL);
-      if (e.key === "s") onQRScanned(QR_PAYLOAD.SALAH);
+      if (gameState === GAME_STATE.SCANNING) {
+        if (e.key === "b") onQRScanned(QR_PAYLOAD.BETUL);
+        if (e.key === "s") onQRScanned(QR_PAYLOAD.SALAH);
+      }
     });
   }
 });

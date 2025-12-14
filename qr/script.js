@@ -127,9 +127,11 @@ function scanLoop() {
    (elak ReferenceError)
    ========================= */
 function sendToESP32(msg) {
-  if (DEBUG_MODE) {
-    console.log("[ESP32 STUB]", msg);
+  if (!serialConnected || !serialWriter) {
+    if (DEBUG_MODE) console.log("[ESP32 NOT CONNECTED]", msg);
+    return;
   }
+  serialWriter.write(new TextEncoder().encode(msg + "\n"));
 }
 
 function resetGame() {

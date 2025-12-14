@@ -428,9 +428,16 @@ function launchConfetti(count = 120) {
     setTimeout(() => c.remove(), 4000);
   }
 }
+/* ============================================================
+   18) EXPOS API
+============================================================ */
+window.disconnectArduino = disconnectArduino;
+window.stopCamera = stopCamera;
+window.stopQuestionTimer = stopQuestionTimer;
+window.resetGame = resetGame;
 
 /* ============================================================
-   18) INIT
+   19) INIT
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   el("startScanBtn")?.addEventListener("click", startGame);

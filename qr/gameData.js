@@ -2,24 +2,17 @@
    gameData.js
    ------------------------------------------------------------
    EDIT FAIL INI SAHAJA UNTUK UBAH GAME
-   JANGAN SENTUH FILE LAIN
+   JANGAN TAMBAH LOGIK / TIMER / EVENT
 ============================================================ */
 
 /* =========================
-   GAME SETTING
+   GAME CONFIG
 ========================= */
-
-// Bilangan pusingan
 const GAME_CONFIG = {
-  TOTAL_ROUNDS: 5,
+  TOTAL_ROUNDS: 5,          // bilangan objek / pusingan
+  ANSWER_TIME: 20,          // masa jawab (saat)
+  PAUSE_AFTER_CORRECT: 3,   // pause lepas betul (saat)
 
-  // Masa jawab (saat)
-  ANSWER_TIME: 20,
-
-  // Pause lepas jawab betul (saat)
-  PAUSE_AFTER_CORRECT: 3,
-
-  // Markah
   SCORE: {
     MAX: 10,
     MIN: 1
@@ -27,16 +20,10 @@ const GAME_CONFIG = {
 };
 
 /* =========================
-   QR DATA
+   QR PAYLOAD
+   (Pemain TIDAK NAMPAK)
 ========================= */
-/*
-  ⚠️ Pemain TAK NAMPAK data ini
-  QR hanya simpan text:
-  - "betul"
-  - "salah"
-*/
-
-const QR_DATA = {
+const QR_PAYLOAD = {
   BETUL: "betul",
   SALAH: "salah"
 };
@@ -58,6 +45,6 @@ const UI_TEXT = {
   IDLE: "TEKAN MULA BERMAIN",
   SCANNING: "SCANNING...",
   ANSWER: "SILA MENJAWAB",
-  GAME_OVER: "PERMAINAN TAMAT",
-  CONGRATS: "TAHNIAH!"
+  CONGRATS: "TAHNIAH!",
+  GAME_OVER: "PERMAINAN TAMAT"
 };

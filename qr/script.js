@@ -1,7 +1,12 @@
 /* ============================================================
    script.js — ENGINE GAME (FINAL, CLEAN, STABLE)
 ============================================================ */
-const HOF_QR_KEY = "hofQR";
+/* =====================
+   GLOBAL CONSTANT
+   ===================== */
+const HOF_QR_KEY = "HOF_QR";   
+const HOF_MAX    = 10;         // Simpan Top 10
+
 /* =====================
    GLOBAL DEBUG SWITCH
    ===================== */

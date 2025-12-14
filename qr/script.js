@@ -170,6 +170,7 @@ function startGame() {
   resetGame();
   // AUTO HIDE HALL OF FAME (KIOSK MODE)
   document.body.classList.add("game-started");
+   console.log("GAME STARTED:", document.body.classList.contains("game-started"));
 
   setGameState(GAME_STATE.SCANNING);
   setText("rockName", UI_TEXT.SCANNING);

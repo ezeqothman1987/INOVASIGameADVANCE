@@ -287,3 +287,35 @@ body.scanning .scanner-overlay {
 .back-home-btn:hover {
   background: rgba(0,0,0,0.9);
 }
+
+/* ============================================================
+   HALL OF FAME – RESPONSIVE SAFETY
+   Digunakan untuk SEMUA MODE (TV / Laptop / Tablet)
+============================================================ */
+
+/* Laptop / Tablet sederhana */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 200px;
+    opacity: 0.92;
+  }
+
+  .app-container {
+    margin-left: 0;
+  }
+}
+
+/* Tablet / Skrin kecil */
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Mobile / sangat kecil */
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+

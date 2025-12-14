@@ -275,3 +275,44 @@ body {
     font-size: 4rem;
   }
 }
+
+/* ============================================================
+   HALL OF FAME – RESPONSIVE SAFETY
+   Tidak ganggu gameplay di skrin kecil
+============================================================ */
+
+/* -----------------------------
+   1) Laptop / Tablet Kecil
+   - Sidebar jadi kecil & tak ganggu
+----------------------------- */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 200px;
+    opacity: 0.92;
+  }
+
+  .app-container {
+    margin-left: 0;   /* game kembali ke tengah */
+  }
+}
+
+/* -----------------------------
+   2) Tablet / Skrin Kecil
+   - Sidebar auto hide
+----------------------------- */
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* -----------------------------
+   3) Skrin Sangat Kecil
+   - Pastikan tiada overflow pelik
+----------------------------- */
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+

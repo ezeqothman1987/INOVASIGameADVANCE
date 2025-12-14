@@ -1,28 +1,14 @@
 /* =====================================================
    GEO QUIZ – 2 PLAYER EVENT MODE
    script.js (FINAL, DISUSUN & DIKEMASKAN)
-
-   CIRI UTAMA:
-   - 2 pemain serentak
-   - Input keyboard:
-       Pemain 1 → A / B
-       Pemain 2 → ← / →
-   - Jawapan dikunci selepas kedua-dua jawab
-   - Bonus kelajuan +5 (jawab terpantas)
-   - Timer ikut gameData.js
-   - Hall of Fame 2 pemain
    ===================================================== */
 
 /* =====================
    IMPORT KONFIGURASI GAME
-   (UBAH DI gameData.js SAHAJA)
    ===================== */
 import { TOTAL_ROUNDS, ROUND_TIME, SPEED_BONUS, ROUNDS } from "./gameData.js";
 import { initInputHandlers } from "./input.js";
 
-/* =====================
-   DEBUG MODE(CHATGPT suruh untuk chek semua)
-   ===================== */
 const DEBUG = false; //tukar true/false  debug
 
 /* =====================

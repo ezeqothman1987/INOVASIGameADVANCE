@@ -314,6 +314,7 @@ function setupBackHomeButton() {
    15) HALL OF FAME (ANTI SALAH TEKAN + TOP 3 CONFETTI)
 ============================================================ */
 function saveHallOfFame() {
+   if (gameState !== GAME_STATE.END) return;
 const name =
     document.getElementById("playerName")?.value.trim() || "Tanpa Nama";
 

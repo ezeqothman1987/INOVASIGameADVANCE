@@ -8,12 +8,15 @@
  { image: "static/image/gambar+soalan", correct: "letak jawapan betul A/B" },
   =========================*/
 export const ROUNDS = [
-  { image: "static/image/gambar1.png", correct: "A" },
-  { image: "static/image/gambar2.png", correct: "B" },
+  { image: "static/image/gambar1.png", correct: "B" },
+  { image: "static/image/gambar2.png", correct: "A" },
   { image: "static/image/gambar3.png", correct: "A" },
   { image: "static/image/gambar4.png", correct: "B" },
-  { image: "static/image/gambar5.png", correct: "A" },
-  { image: "static/image/gambar6.png", correct: "A" }
+  { image: "static/image/gambar5.png", correct: "B" },
+  { image: "static/image/gambar6.png", correct: "A" },
+   { image: "static/image/gambar7.png", correct: "A" },
+   { image: "static/image/gambar8.png", correct: "B" },
+   { image: "static/image/gambar9.png", correct: "A" }
 ];
 
 // =========================

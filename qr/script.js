@@ -1,10 +1,14 @@
 /* ============================================================
-   script.js — (clean, commented)
+   script.js — ENGINE GAME (FINAL, STABLE)
    ------------------------------------------------------------
-   ENGINE GAME + UI + CAMERA + HALL OF FAME
+   Bergantung kepada:
+   - jsQR.js
+   - gameData.js (GAME_CONFIG, UI_TEXT, AUDIO, DEBUG_MODE, dll)
+   - input.js (controller)
 ============================================================ */
+
 /* ============================================================
-   0) SERIAL STATE
+   0) SERIAL STATE (ESP32)
 ============================================================ */
 let serialPort = null;
 let serialWriter = null;
@@ -14,80 +18,75 @@ let serialConnected = false;
 /* ============================================================
    1) AUDIO
 ============================================================ */
-
-const soundCorrect = new Audio(GAME_AUDIO.CORRECT);
-const soundWrong   = new Audio(GAME_AUDIO.WRONG);
-const soundCongrats = new Audio(GAME_AUDIO.CONGRATS);
+const soundCorrect   = new Audio(GAME_AUDIO.CORRECT);
+const soundWrong     = new Audio(GAME_AUDIO.WRONG);
+const soundCongrats  = new Audio(GAME_AUDIO.CONGRATS);
 const soundCountdown = new Audio(GAME_AUDIO.COUNTDOWN);
 
 function safePlay(audio) {
   try {
     audio.currentTime = 0;
     audio.play().catch(() => {});
-  } catch (e) {}
+  } catch {}
 }
-
 
 /* ============================================================
    2) DOM HELPER
 ============================================================ */
-
 function el(id) {
   return document.getElementById(id);
 }
-
 function setText(id, txt) {
   const n = el(id);
   if (n) n.textContent = txt;
 }
-
 function setTextAll(id, txt) {
   document.querySelectorAll(`#${id}`).forEach(n => n.textContent = txt);
 }
 
-
 /* ============================================================
-   3) GAME STATE MACHINE (INI JANTUNG ENGINE)
+   3) GAME STATE MACHINE
 ============================================================ */
-
 const GAME_STATE = {
-  IDLE: "IDLE",          // wait
-  SCANNING: "SCANNING",  // kamera scan QR
-  ANSWERING: "ANSWERING",// pemain jawab
-  PAUSE: "PAUSE",        // pause sat
-  END: "END"             // tamat
+  IDLE: "IDLE",
+  SCANNING: "SCANNING",
+  ANSWERING: "ANSWERING",
+  PAUSE: "PAUSE",
+  END: "END"
 };
 
 let gameState = GAME_STATE.IDLE;
 
+function setGameState(state) {
+  gameState = state;
+  if (DEBUG_MODE) console.log("[STATE]", state);
+}
 
 /* ============================================================
-   4) GAME STATE DATA
+   4) GAME DATA
 ============================================================ */
-
 let roundCount = 0;
 let score = 0;
 let lastQR = null;
 let timeRemaining = 0;
 let timerInterval = null;
 
-
 /* ============================================================
    5) CAMERA & QR
 ============================================================ */
-
-const video = el("video");
+const video  = el("video");
 const canvas = el("qr-canvas");
-const ctx = canvas?.getContext("2d");
+const ctx    = canvas?.getContext("2d");
 
 let scanning = false;
 let qrDebounce = false;
 
 async function startCamera() {
-     if (DEBUG_MODE) {
-    console.warn("DEBUG MODE: Kamera dimatikan");
+  if (DEBUG_MODE) {
+    console.warn("[DEBUG] Kamera dimatikan");
     return;
   }
+
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" }
   });
@@ -112,40 +111,26 @@ function scanLoop() {
   if (!scanning) return;
 
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width = video.videoWidth;
+    canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
     const code = jsQR(img.data, canvas.width, canvas.height);
 
-    if (
-      code &&
-      gameState === GAME_STATE.SCANNING &&
-      !qrDebounce
-    ) {
+    if (code && gameState === GAME_STATE.SCANNING && !qrDebounce) {
       qrDebounce = true;
       setTimeout(() => qrDebounce = false, 1200);
-
       onQRScanned(code.data);
     }
   }
-
   requestAnimationFrame(scanLoop);
 }
 
-function updateScanUI() {
-  document.body.classList.remove("scanning");
-
-  if (gameState === GAME_STATE.SCANNING) {
-    document.body.classList.add("scanning");
-  }
-}
-
 /* ============================================================
-   6) GAME FLOW FUNCTIONS
+   6) GAME FLOW
 ============================================================ */
-
 function resetGame() {
   roundCount = 0;
   score = 0;
@@ -160,46 +145,41 @@ function resetGame() {
 }
 
 function startGame() {
-   sendToESP32("GAME:START");
+  if (gameState !== GAME_STATE.IDLE) return;
+
+  sendToESP32("GAME:START");
   resetGame();
 
-  gameState = GAME_STATE.SCANNING;
+  setGameState(GAME_STATE.SCANNING);
   setText("rockName", UI_TEXT.SCANNING);
-  if (el("cameraStatus")) {
-    el("cameraStatus").textContent = UI_TEXT.SCANNING;
-  }
+
+  el("cameraStatus") &&
+    (el("cameraStatus").textContent =
+      DEBUG_MODE ? "[DEBUG] SIMULASI QR" : UI_TEXT.SCANNING);
 
   startCamera();
 }
 
-
 /* ============================================================
-   7) QR BERJAYA DISCAN
+   7) QR SCANNED
 ============================================================ */
-
 function onQRScanned(payload) {
   const txt = payload.trim().toLowerCase();
   if (txt !== QR_PAYLOAD.BETUL && txt !== QR_PAYLOAD.SALAH) return;
 
   lastQR = txt;
-  gameState = GAME_STATE.ANSWERING;
+  setGameState(GAME_STATE.ANSWERING);
 
   timeRemaining = GAME_CONFIG.ANSWER_TIME;
   setText("timer", timeRemaining);
   setText("rockName", UI_TEXT.ANSWER);
 
-  if (el("cameraStatus")) {
-    el("cameraStatus").textContent = UI_TEXT.ANSWER;
-  }
-
   startQuestionTimer();
 }
 
-
 /* ============================================================
-   8) TIMER JAWAPAN
+   8) TIMER
 ============================================================ */
-
 function startQuestionTimer() {
   stopQuestionTimer();
 
@@ -222,77 +202,57 @@ function stopQuestionTimer() {
   }
 }
 
-
 /* ============================================================
-   9) JAWAPAN PEMAIN (DIPANGGIL DARI input.js)
+   9) PLAYER ANSWER (DARI input.js)
 ============================================================ */
-
 function playerAnswer(answer) {
   if (gameState !== GAME_STATE.ANSWERING) return;
-
-  if (answer === lastQR) {
-    handleCorrectAnswer();
-  } else {
-    handleWrongAnswer();
-  }
+  answer === lastQR ? handleCorrectAnswer() : handleWrongAnswer();
 }
-
 
 /* ============================================================
    10) BETUL
 ============================================================ */
-
 function handleCorrectAnswer() {
   sendToESP32("LED:GREEN");
   stopQuestionTimer();
   safePlay(soundCorrect);
-
   flashScreen("green");
 
   const raw = Math.ceil(
-    (timeRemaining / GAME_CONFIG.ANSWER_TIME) *
-    GAME_CONFIG.SCORE.MAX
+    (timeRemaining / GAME_CONFIG.ANSWER_TIME) * GAME_CONFIG.SCORE.MAX
   );
-
   score += Math.max(GAME_CONFIG.SCORE.MIN, raw);
   roundCount++;
 
   setText("score", score);
-
-  gameState = GAME_STATE.PAUSE;
+  setGameState(GAME_STATE.PAUSE);
 
   setTimeout(() => {
-    if (roundCount >= GAME_CONFIG.TOTAL_ROUNDS) {
-      handleGameWin();
-    } else {
-      gameState = GAME_STATE.SCANNING;
-      setText("rockName", UI_TEXT.SCANNING);
-    }
+    roundCount >= GAME_CONFIG.TOTAL_ROUNDS
+      ? handleGameWin()
+      : (setGameState(GAME_STATE.SCANNING),
+         setText("rockName", UI_TEXT.SCANNING));
   }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
 }
-
 
 /* ============================================================
    11) SALAH
 ============================================================ */
-
 function handleWrongAnswer() {
   sendToESP32("LED:RED");
   stopQuestionTimer();
   safePlay(soundWrong);
-
   flashScreen("red");
   endGame();
 }
 
-
 /* ============================================================
-   12) MENANG (CUKUP ROUND)
+   12) MENANG
 ============================================================ */
-
-function handleGameWin() 
+function handleGameWin() {
   sendToESP32("LED:GOLD");
-  gameState = GAME_STATE.END;
+  setGameState(GAME_STATE.END);
 
   safePlay(soundCongrats);
   flashScreen("gold");
@@ -301,44 +261,37 @@ function handleGameWin()
   endGame();
 }
 
-
 /* ============================================================
-   13) END GAME → IDLE
+   13) END GAME
 ============================================================ */
-
-function endGame() 
+function endGame() {
   sendToESP32("GAME:END");
   stopCamera();
   stopQuestionTimer();
 
-  gameState = GAME_STATE.END;
-
+  setGameState(GAME_STATE.END);
   setTextAll("finalScore", score);
+
   el("endModal").style.display = "block";
 }
 
-
 /* ============================================================
-   14) VISUAL EFFECT
+   14) VISUAL
 ============================================================ */
-
 function flashScreen(color) {
   document.body.classList.remove("flash-green", "flash-red", "flash-gold");
-
-  if (color === "green") document.body.classList.add("flash-green");
-  if (color === "red") document.body.classList.add("flash-red");
-  if (color === "gold") document.body.classList.add("flash-gold");
+  document.body.classList.add(`flash-${color}`);
 
   setTimeout(() => {
-    document.body.classList.remove("flash-green", "flash-red", "flash-gold");
+    document.body.classList.remove(`flash-${color}`);
   }, 400);
 }
+
 /* ============================================================
-   16) HALL OF FAME
+   15) HALL OF FAME (LOCAL STORAGE)
 ============================================================ */
 function savePlayerName() {
-  const nameInput = el("playerName");
-  const name = nameInput.value.trim() || "Tanpa Nama";
+  const name = el("playerName").value.trim() || "Tanpa Nama";
 
   const record = {
     name,
@@ -346,25 +299,22 @@ function savePlayerName() {
     date: new Date().toLocaleDateString()
   };
 
-  const hof = JSON.parse(localStorage.getItem("hof_QR") || "[]");
+  const hof = JSON.parse(localStorage.getItem(HOF_QR_KEY) || "[]");
   hof.push(record);
-
   hof.sort((a, b) => b.score - a.score);
-  localStorage.setItem("hallOfFame", JSON.stringify(hof.slice(0, 10)));
 
+  localStorage.setItem(HOF_QR_KEY, JSON.stringify(hof.slice(0, 10)));
   updateHallOfFameUI();
 
-  // RESET KE IDLE
-  nameInput.value = "";
+  el("playerName").value = "";
   el("endModal").style.display = "none";
 
   resetGame();
-  gameState = GAME_STATE.IDLE;
-
-  setText("rockName", UI_TEXT.IDLE);
+  setGameState(GAME_STATE.IDLE);
 }
+
 /* ============================================================
-   16) STATUS CONTROLR
+   16) SERIAL (ESP32)
 ============================================================ */
 async function connectArduino() {
   try {
@@ -376,7 +326,6 @@ async function connectArduino() {
 
     serialConnected = true;
     updateSerialStatus();
-
     readSerialLoop();
   } catch (e) {
     console.error("Serial error:", e);
@@ -385,71 +334,53 @@ async function connectArduino() {
 
 async function disconnectArduino() {
   serialConnected = false;
-
   try {
     await serialReader?.cancel();
     await serialWriter?.close();
     await serialPort?.close();
   } catch {}
-
-  serialPort = null;
   updateSerialStatus();
 }
 
 function updateSerialStatus() {
-  el("serialStatus").textContent = serialConnected
-    ? "CONNECTED"
-    : "DISCONNECTED";
+  el("serialStatus").textContent =
+    serialConnected ? "CONNECTED" : "DISCONNECTED";
 }
+
 async function readSerialLoop() {
   const decoder = new TextDecoder();
-
   while (serialConnected) {
-    try {
-      const { value, done } = await serialReader.read();
-      if (done) break;
-
-      const msg = decoder.decode(value).trim();
-      handleSerialInput(msg);
-    } catch {
-      break;
-    }
+    const { value, done } = await serialReader.read();
+    if (done) break;
+    handleSerialInput(decoder.decode(value).trim());
   }
 }
+
 function handleSerialInput(msg) {
   if (gameState !== GAME_STATE.ANSWERING) return;
-
-  if (msg === "BTN:1") playerAnswer("betul");
-  if (msg === "BTN:2") playerAnswer("salah");
+  if (msg === "BTN:1") playerAnswer(QR_PAYLOAD.BETUL);
+  if (msg === "BTN:2") playerAnswer(QR_PAYLOAD.SALAH);
 }
 
 function sendToESP32(message) {
   if (!serialConnected || !serialWriter) return;
-
-  const encoder = new TextEncoder();
-  serialWriter.write(encoder.encode(message + "\n"));
+  serialWriter.write(new TextEncoder().encode(message + "\n"));
 }
 
 /* ============================================================
    17) INIT
 ============================================================ */
-
 document.addEventListener("DOMContentLoaded", () => {
-
-  // START BUTTON (URUSETIA)
   el("startBtn")?.addEventListener("click", startGame);
 
   setText("rockName", UI_TEXT.IDLE);
   setText("timer", GAME_CONFIG.ANSWER_TIME);
-document.addEventListener("keydown", (e) => {
-  if (!DEBUG_MODE) return;
 
-  if (e.key === "b" && gameState === GAME_STATE.SCANNING) {
-    onQRScanned(QR_PAYLOAD.BETUL);
+  if (DEBUG_MODE) {
+    document.addEventListener("keydown", e => {
+      if (gameState !== GAME_STATE.SCANNING) return;
+      if (e.key === "b") onQRScanned(QR_PAYLOAD.BETUL);
+      if (e.key === "s") onQRScanned(QR_PAYLOAD.SALAH);
+    });
   }
-
-  if (e.key === "s" && gameState === GAME_STATE.SCANNING) {
-    onQRScanned(QR_PAYLOAD.SALAH);
-  }
-});
 });

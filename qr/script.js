@@ -1,6 +1,12 @@
 /* ============================================================
    script.js — ENGINE GAME (FINAL, CLEAN, STABLE)
 ============================================================ */
+const HOF_QR_KEY = "hofQR";
+/* =====================
+   GLOBAL DEBUG SWITCH
+   ===================== */
+const DEBUG_MODE = false;
+// tukar ke true bila nak debug
 
 /* ============================================================
    0) SERIAL STATE (ESP32)

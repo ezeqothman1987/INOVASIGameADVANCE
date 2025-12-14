@@ -1,124 +1,63 @@
 /* ============================================================
    gameData.js
-   - Enjin permainan
-   - Simpan STATE & LOGIK sahaja
-   - Tiada event listener
+   ------------------------------------------------------------
+   EDIT FAIL INI SAHAJA UNTUK UBAH GAME
+   JANGAN SENTUH FILE LAIN
 ============================================================ */
 
 /* =========================
-   CONFIG GAME
+   GAME SETTING
 ========================= */
-const TOTAL_ROUNDS = 5;
-const ROUND_TIME = 20;
-const NEXT_ROUND_TIME = 20;
-const MAX_POINTS = 10;
-const MIN_POINTS = 1;
 
-/* =========================
-   STATE GAME
-========================= */
-let awaitingAnswer = false;
-let lastQR = "";
-let roundCount = 0;
-let score = 0;
-let timeRemaining = ROUND_TIME;
-let questionInterval = null;
-let pausedUntilNextQR = false;
+// Bilangan pusingan
+const GAME_CONFIG = {
+  TOTAL_ROUNDS: 5,
 
-/* =========================
-   RESET STATE GAME
-========================= */
-function resetGameState() {
-  awaitingAnswer = false;
-  lastQR = "";
-  roundCount = 0;
-  score = 0;
-  timeRemaining = ROUND_TIME;
-  pausedUntilNextQR = false;
-  stopQuestionTimer();
-}
+  // Masa jawab (saat)
+  ANSWER_TIME: 20,
 
-/* =========================
-   TERIMA QR
-========================= */
-function processScannedQR(payload) {
-  const txt = String(payload).trim().toLowerCase();
-  if (txt !== "betul" && txt !== "salah") return;
+  // Pause lepas jawab betul (saat)
+  PAUSE_AFTER_CORRECT: 3,
 
-  lastQR = txt;
-  awaitingAnswer = true;
-  timeRemaining = ROUND_TIME;
-  pausedUntilNextQR = false;
-
-  setText("timer", timeRemaining);
-  setText("rockName", "MULA MENJAWAB");
-
-  startQuestionTimer();
-}
-
-/* =========================
-   TIMER SOALAN
-========================= */
-function startQuestionTimer() {
-  stopQuestionTimer();
-
-  questionInterval = setInterval(() => {
-    if (pausedUntilNextQR) return;
-
-    timeRemaining--;
-    setText("timer", timeRemaining);
-
-    if (timeRemaining <= 0) {
-      safePlay(soundTimeup);
-      endGame();
-    }
-  }, 1000);
-}
-
-function stopQuestionTimer() {
-  if (questionInterval) {
-    clearInterval(questionInterval);
-    questionInterval = null;
+  // Markah
+  SCORE: {
+    MAX: 10,
+    MIN: 1
   }
-}
+};
 
 /* =========================
-   JAWAPAN PEMAIN
+   QR DATA
 ========================= */
-function playerAnswer(answer) {
-  if (!awaitingAnswer) return;
+/*
+  ⚠️ Pemain TAK NAMPAK data ini
+  QR hanya simpan text:
+  - "betul"
+  - "salah"
+*/
 
-  const a = String(answer).toLowerCase();
+const QR_DATA = {
+  BETUL: "betul",
+  SALAH: "salah"
+};
 
-  if (a === lastQR) {
-    // BETUL
-    stopQuestionTimer();
-    safePlay(soundCorrect);
+/* =========================
+   AUDIO FILE
+========================= */
+const GAME_AUDIO = {
+  CORRECT: "qr/static/sound/correct.mp3",
+  WRONG: "qr/static/sound/wrong.mp3",
+  CONGRATS: "qr/static/sound/congrats.mp3",
+  COUNTDOWN: "qr/static/sound/countdown.mp3"
+};
 
-    const earned = Math.max(
-      MIN_POINTS,
-      Math.ceil((timeRemaining / ROUND_TIME) * MAX_POINTS)
-    );
-
-    score += earned;
-    roundCount++;
-
-    setText("score", score);
-
-    awaitingAnswer = false;
-    pausedUntilNextQR = true;
-    timeRemaining = NEXT_ROUND_TIME;
-    setText("timer", timeRemaining);
-    setText("rockName", "–");
-
-    if (roundCount >= TOTAL_ROUNDS) {
-      setTimeout(endGame, 600);
-    }
-
-  } else {
-    // SALAH
-    stopQuestionTimer();
-    safePlay(soundWrong);
-    endGame();
-  }
-}
+/* =========================
+   UI TEXT
+========================= */
+const UI_TEXT = {
+  IDLE: "TEKAN MULA BERMAIN",
+  SCANNING: "SCANNING...",
+  ANSWER: "SILA MENJAWAB",
+  GAME_OVER: "PERMAINAN TAMAT",
+  CONGRATS: "TAHNIAH!"
+};

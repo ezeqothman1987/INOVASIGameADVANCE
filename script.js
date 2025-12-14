@@ -1,4 +1,4 @@
-const HOF_QR_KEY = "hof_qr";
+const HOF_QR_KEY = "HOF_QR";
 const HOF_VIDEO_KEY = "hof_video";
 
 /* =========================

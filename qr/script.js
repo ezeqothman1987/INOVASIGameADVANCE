@@ -122,6 +122,16 @@ function scanLoop() {
 /* ============================================================
    6) GAME FLOW
 ============================================================ */
+/* =========================
+   +ESP32 SAFE STUB
+   (elak ReferenceError)
+   ========================= */
+function sendToESP32(msg) {
+  if (DEBUG_MODE) {
+    console.log("[ESP32 STUB]", msg);
+  }
+}
+
 function resetGame() {
   roundCount = 0;
   score = 0;

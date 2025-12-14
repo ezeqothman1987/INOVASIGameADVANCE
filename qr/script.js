@@ -140,15 +140,28 @@ function sendToESP32(msg) {
 }
 
 function resetGame() {
+  // Reset data permainan
   roundCount = 0;
   score = 0;
   lastQR = null;
-  stopQuestionTimer();
+  timeRemaining = 0;
 
+  stopQuestionTimer();
+  stopCamera();
+
+  // Reset UI
   setText("score", "0");
   setText("timer", GAME_CONFIG.ANSWER_TIME);
   setText("rockName", UI_TEXT.IDLE);
+
+  // TUTUP MODAL
+  const modal = el("endModal");
+  if (modal) modal.style.display = "none";
+
+  // Reset state
+  setGameState(GAME_STATE.IDLE);
 }
+
 
 function startGame() {
   if (gameState !== GAME_STATE.IDLE) return;

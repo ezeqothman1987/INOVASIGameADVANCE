@@ -19,9 +19,10 @@ let serialConnected = false;
 /* ============================================================
    1) AUDIO
 ============================================================ */
-const soundCorrect  = new Audio(GAME_AUDIO.CORRECT);
-const soundWrong    = new Audio(GAME_AUDIO.WRONG);
-const soundCongrats = new Audio(GAME_AUDIO.CONGRATS);
+const SOUND_PATH = "../static/sound/";
+const soundCorrect  = new Audio(SOUND_PATH + "correct.mp3");
+const soundWrong    = new Audio(SOUND_PATH + "wrong.mp3");
+const soundCongrats = new Audio(SOUND_PATH + "timeup.mp3");
 
 function safePlay(a) {
   try {

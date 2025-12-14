@@ -431,10 +431,21 @@ function launchConfetti(count = 120) {
 /* ============================================================
    18) EXPOS API
 ============================================================ */
-window.disconnectArduino = disconnectArduino;
-window.stopCamera = stopCamera;
-window.stopQuestionTimer = stopQuestionTimer;
-window.resetGame = resetGame;
+if (typeof disconnectArduino === "function") {
+  window.disconnectArduino = disconnectArduino;
+}
+
+if (typeof stopCamera === "function") {
+  window.stopCamera = stopCamera;
+}
+
+if (typeof stopQuestionTimer === "function") {
+  window.stopQuestionTimer = stopQuestionTimer;
+}
+
+if (typeof resetGame === "function") {
+  window.resetGame = resetGame;
+}
 
 /* ============================================================
    19) INIT

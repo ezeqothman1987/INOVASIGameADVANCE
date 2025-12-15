@@ -1,99 +1,73 @@
 /* ============================================================
-   input.js — GEOQUIZ BATTLE MODE (2 PLAYER)
-------------------------------------------------------------
-   TUGAS FAIL INI:
-   - Terima input dari pelbagai sumber
-   - Terjemah kepada:
-       window.playerAnswer(1, true/false)
-       window.playerAnswer(2, true/false)
-   - TIADA logik permainan di sini
+   input.js — BATTLE MODE (2 PEMAIN)
 ============================================================ */
 
-/* =========================
-   SAFETY CHECK
-========================= */
 function canAnswer() {
   return typeof window.playerAnswer === "function";
 }
 
 /* =========================
    1) ON-SCREEN BUTTON
-   - data-player="1" / "2"
-   - data-answer="true" / "false"
+   - btnCorrect  → P1 A
+   - btnWrong    → P1 B
+   - btnCorrect2 → P2 A
+   - btnWrong2   → P2 B
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".battle-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (!canAnswer()) return;
+  document.getElementById("btnCorrect")?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(1, true);
+  });
 
-      const player = Number(btn.dataset.player);
-      const answer =
-        btn.dataset.answer === "true"
-          ? true
-          : btn.dataset.answer === "false"
-          ? false
-          : null;
+  document.getElementById("btnWrong")?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(1, false);
+  });
 
-      if (player && answer !== null) {
-        window.playerAnswer(player, answer);
-      }
-    });
+  document.getElementById("btnCorrect2")?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(2, true);
+  });
+
+  document.getElementById("btnWrong2")?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(2, false);
   });
 });
 
 /* =========================
-   2) KEYBOARD INPUT
-------------------------------------------------
-   PLAYER 1:
-     A  → true
-     B  → false
-
-   PLAYER 2:
-     ArrowLeft  → true
-     ArrowRight → false
-
-   (Dancepad special case)
-     Player 1: ArrowUp / ArrowDown
-     Player 2: ArrowLeft / ArrowRight
+   2) KEYBOARD
+   P1: A / ← , B / →
+   P2: J / L
 ========================= */
 document.addEventListener("keydown", e => {
   if (!canAnswer()) return;
 
   switch (e.key) {
-    /* ===== PLAYER 1 ===== */
+    // PLAYER 1
+    case "ArrowLeft":
     case "a":
     case "A":
-    case "ArrowUp":       // dancepad P1
       window.playerAnswer(1, true);
       break;
 
+    case "ArrowRight":
     case "b":
     case "B":
-    case "ArrowDown":     // dancepad P1
       window.playerAnswer(1, false);
       break;
 
-    /* ===== PLAYER 2 ===== */
-    case "ArrowLeft":
+    // PLAYER 2
+    case "j":
+    case "J":
       window.playerAnswer(2, true);
       break;
 
-    case "ArrowRight":
+    case "l":
+    case "L":
       window.playerAnswer(2, false);
       break;
   }
 });
 
 /* =========================
-   3) GAMEPAD / DANCEPAD
-------------------------------------------------
-   Pad 0 → Player 1
-     Button 0 → true
-     Button 1 → false
-
-   Pad 1 → Player 2
-     Button 0 → true
-     Button 1 → false
+   3) GAMEPAD (PLAYER 1)
 ========================= */
 let lastGamepadState = {};
 
@@ -101,50 +75,32 @@ function pollGamepad() {
   const pads = navigator.getGamepads?.();
   if (!pads) return requestAnimationFrame(pollGamepad);
 
-  pads.forEach((pad, padIndex) => {
-    if (!pad || padIndex > 1) return;
+  const pad = pads[0];
+  if (!pad) return requestAnimationFrame(pollGamepad);
 
-    pad.buttons.forEach((btn, i) => {
-      const key = `${padIndex}-${i}`;
-      const prev = lastGamepadState[key] || false;
+  pad.buttons.forEach((btn, i) => {
+    const prev = lastGamepadState[i] || false;
 
-      if (btn.pressed && !prev && canAnswer()) {
-        const player = padIndex + 1;
+    if (btn.pressed && !prev) {
+      if (!canAnswer()) return;
+      if (i === 0) window.playerAnswer(1, true);
+      if (i === 1) window.playerAnswer(1, false);
+    }
 
-        if (i === 0) window.playerAnswer(player, true);
-        if (i === 1) window.playerAnswer(player, false);
-      }
-
-      lastGamepadState[key] = btn.pressed;
-    });
+    lastGamepadState[i] = btn.pressed;
   });
 
   requestAnimationFrame(pollGamepad);
 }
-
 pollGamepad();
 
 /* =========================
-   4) ARDUINO / SERIAL INPUT
-------------------------------------------------
-   FORMAT DISYORKAN:
-     P1:A   P1:B
-     P2:A   P2:B
-
-   (fallback legacy)
-     A / B → Player 1
+   4) ARDUINO (PLAYER 1)
 ========================= */
 window.handleArduinoInput = function (msg) {
   if (!canAnswer()) return;
 
   const v = msg.trim().toUpperCase();
-
-  if (v === "P1:A") window.playerAnswer(1, true);
-  if (v === "P1:B") window.playerAnswer(1, false);
-  if (v === "P2:A") window.playerAnswer(2, true);
-  if (v === "P2:B") window.playerAnswer(2, false);
-
-  // fallback (lama)
   if (v === "A" || v === "1") window.playerAnswer(1, true);
   if (v === "B" || v === "0") window.playerAnswer(1, false);
 };

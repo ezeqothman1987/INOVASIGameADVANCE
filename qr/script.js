@@ -313,7 +313,15 @@ function loadHallOfFame() {
 function saveHallOfFame(list) {
   localStorage.setItem(HOF_KEY, JSON.stringify(list));
 }
+
 function addToHallOfFame(playerName, score) {
+  console.log("HOF ADD:", playerName, score);
+
+  if (score === undefined || score === null) {
+    console.warn("HOF: score undefined, batal simpan");
+    return;
+  }
+
   const hof = loadHallOfFame();
 
   hof.push({
@@ -323,13 +331,14 @@ function addToHallOfFame(playerName, score) {
   });
 
   hof.sort((a, b) => b.score - a.score);
-
   saveHallOfFame(hof.slice(0, HOF_MAX));
+
   renderHallOfFame();
 }
 function renderHallOfFame() {
   const ul = document.getElementById("hofQR");
   if (!ul) return;
+   console.log("Render HOF");
 
   const hof = loadHallOfFame();
   ul.innerHTML = "";

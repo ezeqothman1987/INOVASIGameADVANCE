@@ -1,120 +1,13 @@
-
 /* ============================================================
-   input.js — BATTLE MODE (2 PEMAIN)
-============================================================ 
-
-function canAnswer() {
-  return typeof window.playerAnswer === "function";
-}
- =========================
-   1) ON-SCREEN BUTTON
-   - btnCorrect  → P1 A
-   - btnWrong    → P1 B
-   - btnCorrect2 → P2 A
-   - btnWrong2   → P2 B
-========================= 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnCorrect")?.addEventListener("click", () => {
-    if (canAnswer()) window.playerAnswer(1, true);
-  });
-
-  document.getElementById("btnWrong")?.addEventListener("click", () => {
-    if (canAnswer()) window.playerAnswer(1, false);
-  });
-
-  document.getElementById("btnCorrect2")?.addEventListener("click", () => {
-    if (canAnswer()) window.playerAnswer(2, true);
-  });
-
-  document.getElementById("btnWrong2")?.addEventListener("click", () => {
-    if (canAnswer()) window.playerAnswer(2, false);
-  });
-});
-
- =========================
-   2) KEYBOARD
-   P1: A / ← , B / →
-   P2: J / L
-========================= 
-document.addEventListener("keydown", e => {
-  if (!canAnswer()) return;
-
-  switch (e.key) {
-    // PLAYER 1
-    case "ArrowLeft":
-    case "a":
-    case "A":
-      window.playerAnswer(1, true);
-      break;
-
-    case "ArrowRight":
-    case "b":
-    case "B":
-      window.playerAnswer(1, false);
-      break;
-
-    // PLAYER 2
-    case "j":
-    case "J":
-      window.playerAnswer(2, true);
-      break;
-
-    case "l":
-    case "L":
-      window.playerAnswer(2, false);
-      break;
-  }
-});
-
- =========================
-   3) GAMEPAD (PLAYER 1)
-========================= 
-let lastGamepadState = {};
-
-function pollGamepad() {
-  const pads = navigator.getGamepads?.();
-  if (!pads) return requestAnimationFrame(pollGamepad);
-
-  const pad = pads[0];
-  if (!pad) return requestAnimationFrame(pollGamepad);
-
-  pad.buttons.forEach((btn, i) => {
-    const prev = lastGamepadState[i] || false;
-
-    if (btn.pressed && !prev) {
-      if (!canAnswer()) return;
-      if (i === 0) window.playerAnswer(1, true);
-      if (i === 1) window.playerAnswer(1, false);
-    }
-
-    lastGamepadState[i] = btn.pressed;
-  });
-
-  requestAnimationFrame(pollGamepad);
-}
-pollGamepad();
-
- =========================
-   4) ARDUINO (PLAYER 1)
-========================= 
-window.handleArduinoInput = function (msg) {
-  if (!canAnswer()) return;
-
-  const v = msg.trim().toUpperCase();
-  if (v === "A" || v === "1") window.playerAnswer(1, true);
-  if (v === "B" || v === "0") window.playerAnswer(1, false);
-};
-*/
-/* ============================================================
-   input.js — GEOQUIZ BATTLE MODE (2 PLAYER)
+   input.js  (2 PLAYER)
    ------------------------------------------------------------
    TUGAS FAIL INI:
-   - Terima input dari:
-       1) On-screen buttons
-       2) Keyboard
+   - Terima input dari pelbagai sumber
    - Terjemah kepada:
        window.playerAnswer(player, answer)
-   - ❌ TIADA logik permainan
+         player: 1 | 2
+         answer: true | false
+   - TIADA logik permainan di sini
 ============================================================ */
 
 /* =========================
@@ -126,20 +19,30 @@ function canAnswer() {
 
 /* =========================
    1) ON-SCREEN BUTTONS
-   (ikut index.html)
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  const buttons = document.querySelectorAll(".battle-btn");
+  // PLAYER 1
+  const btnP1A = document.getElementById("btnP1A");
+  const btnP1B = document.getElementById("btnP1B");
 
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (!canAnswer()) return;
+  btnP1A?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(1, true);
+  });
 
-      const player = Number(btn.dataset.player);
-      const answer = btn.dataset.answer === "true";
+  btnP1B?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(1, false);
+  });
 
-      window.playerAnswer(player, answer);
-    });
+  // PLAYER 2
+  const btnP2Left  = document.getElementById("btnP2Left");
+  const btnP2Right = document.getElementById("btnP2Right");
+
+  btnP2Left?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(2, true);
+  });
+
+  btnP2Right?.addEventListener("click", () => {
+    if (canAnswer()) window.playerAnswer(2, false);
   });
 });
 
@@ -147,19 +50,18 @@ document.addEventListener("DOMContentLoaded", () => {
    2) KEYBOARD INPUT
 ========================= */
 /*
-  PEMAIN 1:
-    A → true
-    B → false
+   PLAYER 1
+     A  → true
+     B  → false
 
-  PEMAIN 2:
-    ← → true
-    → → false
+   PLAYER 2
+     ArrowLeft  → true
+     ArrowRight → false
 */
 document.addEventListener("keydown", e => {
   if (!canAnswer()) return;
 
   switch (e.key) {
-
     // PLAYER 1
     case "a":
     case "A":
@@ -181,4 +83,63 @@ document.addEventListener("keydown", e => {
       break;
   }
 });
+
+/* =========================
+   3) GAMEPAD (2 PLAYER)
+   - Pad 1:
+       Btn 0 → P1 A
+       Btn 1 → P1 B
+   - Pad 2:
+       Btn 0 → P2 A
+       Btn 1 → P2 B
+========================= */
+let lastGamepadState = [{}, {}];
+
+function pollGamepad() {
+  const pads = navigator.getGamepads?.();
+  if (!pads) return requestAnimationFrame(pollGamepad);
+
+  pads.forEach((pad, index) => {
+    if (!pad || index > 1) return;
+
+    pad.buttons.forEach((btn, i) => {
+      const prev = lastGamepadState[index][i] || false;
+
+      if (btn.pressed && !prev) {
+        if (!canAnswer()) return;
+
+        if (i === 0) window.playerAnswer(index + 1, true);
+        if (i === 1) window.playerAnswer(index + 1, false);
+      }
+
+      lastGamepadState[index][i] = btn.pressed;
+    });
+  });
+
+  requestAnimationFrame(pollGamepad);
+}
+
+pollGamepad();
+
+/* =========================
+   4) ARDUINO / SERIAL INPUT
+========================= */
+/*
+   Contoh mesej:
+     P1:A
+     P1:B
+     P2:L
+     P2:R
+*/
+window.handleArduinoInput = function (msg) {
+  if (!canAnswer()) return;
+
+  const v = msg.trim().toUpperCase();
+
+  if (v === "P1:A") window.playerAnswer(1, true);
+  if (v === "P1:B") window.playerAnswer(1, false);
+
+  if (v === "P2:L") window.playerAnswer(2, true);
+  if (v === "P2:R") window.playerAnswer(2, false);
+};
 

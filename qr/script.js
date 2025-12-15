@@ -286,9 +286,72 @@ function endGame(win) {
   if (win) {
     playSound(audioClap);
     cameraStatus.textContent = UI_TEXT.CONGRATS;
+     setTimeout(() => {
+    const name = prompt("Masukkan nama untuk Hall of Fame:");
+    addToHallOfFame(name, score);
+  }, 300);
   } else {
     cameraStatus.textContent = UI_TEXT.GAME_OVER;
   }
 
   document.body.className = "idle";
+}
+/* =========================
+   HALL OF FAME CONFIG
+========================= */
+const HOF_KEY = "geoquiz_hall_of_fame";
+const HOF_MAX = 5;
+
+function loadHallOfFame() {
+  try {
+    return JSON.parse(localStorage.getItem(HOF_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHallOfFame(list) {
+  localStorage.setItem(HOF_KEY, JSON.stringify(list));
+}
+function addToHallOfFame(playerName, score) {
+  const hof = loadHallOfFame();
+
+  hof.push({
+    name: playerName || "Tanpa Nama",
+    score: score,
+    date: new Date().toLocaleDateString("ms-MY")
+  });
+
+  hof.sort((a, b) => b.score - a.score);
+
+  saveHallOfFame(hof.slice(0, HOF_MAX));
+  renderHallOfFame();
+}
+function renderHallOfFame() {
+  const ul = document.getElementById("hofQR");
+  if (!ul) return;
+
+  const hof = loadHallOfFame();
+  ul.innerHTML = "";
+
+  if (hof.length === 0) {
+    const li = document.createElement("li");
+    li.style.opacity = "0.6";
+    li.textContent = "Belum ada rekod";
+    ul.appendChild(li);
+    return;
+  }
+
+  hof.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+
+    li.innerHTML = `
+      <strong>${index + 1}. ${item.name}</strong><br>
+      <span>${item.score} markah</span>
+      <small style="opacity:.6"> (${item.date})</small>
+    `;
+
+    ul.appendChild(li);
+  });
 }

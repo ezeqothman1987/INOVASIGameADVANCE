@@ -1,252 +1,285 @@
 /* ============================================================
-   script.js — GEOQUIZ TEXT QR (HTML-SYNC VERSION)
+   script.js — GEOQUIZ GAME LOGIC
+   - Depends on: gameData.js, input.js, jsQR.js
 ============================================================ */
 
-/* ============================================================
-   0) DEBUG MODE
-============================================================ */
-const DEBUG = false;
-const log = (...a) => DEBUG && console.log("[DEBUG]", ...a);
-
-/* ============================================================
-   1) AUDIO (ROOT /static/sound)
-============================================================ */
-const SOUND = {
-  CORRECT: new Audio("../static/sound/yay.mp3"),
-  WRONG:   new Audio("../static/sound/boo.mp3"),
-  WIN:     new Audio("../static/sound/clap.mp3")
-};
-
-function playSound(a) {
-  try { a.currentTime = 0; a.play(); } catch {}
+/* =========================
+   DEBUG MODE
+========================= */
+const DEBUG = true;
+function debugLog(...args) {
+  if (DEBUG) console.log("[DEBUG]", ...args);
 }
 
-/* ============================================================
-   2) STATE MACHINE
-============================================================ */
+/* =========================
+   DOM REFERENCES
+========================= */
+const video = document.getElementById("video");
+const canvas = document.getElementById("qr-canvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+const startBtn = document.getElementById("startBtn");
+const cameraStatus = document.getElementById("cameraStatus");
+
+const roundText = document.getElementById("roundText");
+const scoreText = document.getElementById("scoreText");
+const timeText = document.getElementById("timeText");
+
+const questionBox = document.getElementById("questionBox");
+const questionText = document.getElementById("questionText");
+const timeBarFill = document.getElementById("timeBarFill");
+
+/* =========================
+   AUDIO
+========================= */
+const audioCorrect = new Audio("static/sound/yay.mp3");
+const audioWrong   = new Audio("static/sound/boo.mp3");
+const audioClap    = new Audio("static/sound/clap.mp3");
+
+/* =========================
+   GAME STATE
+========================= */
 const STATE = {
-  IDLE: "IDLE",
-  SCANNING: "SCANNING",
-  ANSWERING: "ANSWERING",
-  PAUSE: "PAUSE",
-  END: "END"
+  IDLE: "idle",
+  SCANNING: "scanning",
+  ANSWERING: "answering",
+  PAUSE: "pause",
+  END: "end"
 };
 
-let gameState = STATE.IDLE;
-const setState = s => {
-  gameState = s;
-  document.body.className = s.toLowerCase();
-  log("STATE →", s);
-};
-
-/* ============================================================
-   3) QUESTION BANK (3 AKTIF)
-============================================================ */
-const QUESTIONS = {
-  Granit: [
-    { q: "Granit ialah batuan igneus.", a: true },
-    { q: "Granit terbentuk melalui pemendapan.", a: false }
-  ],
-  Syis: [
-    { q: "Syis ialah batuan metamorf.", a: true },
-    { q: "Syis ialah batuan igneus.", a: false }
-  ],
-  Kuarzit: [
-    { q: "Kuarzit berasal daripada batu pasir.", a: true },
-    { q: "Kuarzit ialah batuan sedimen.", a: false }
-  ]
-  // Lain DISIMPAN
-};
-
-/* ============================================================
-   4) DOM HELPER
-============================================================ */
-const el = id => document.getElementById(id);
-const txt = (id, v) => el(id) && (el(id).textContent = v);
-
-/* ============================================================
-   5) GAME VARIABLE
-============================================================ */
-let round = 0;
+let currentState = STATE.IDLE;
+let currentRound = 0;
 let score = 0;
+
+let currentAnswer = null;
 let timer = null;
 let timeLeft = 0;
-let correctAnswer = null;
 
-/* ============================================================
-   6) CAMERA & QR
-============================================================ */
-const video = el("video");
-const canvas = el("qr-canvas");
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
-let scanning = false;
+/* =========================
+   QUESTION BANK (AKTIF 3 SAHAJA)
+========================= */
+const QUESTION_BANK = {
+  Granit: [
+    { q: "Granit ialah batuan igneus?", a: true },
+    { q: "Granit terbentuk di permukaan bumi?", a: false }
+  ],
+  Syis: [
+    { q: "Syis ialah batuan metamorf?", a: true },
+    { q: "Syis terbentuk dari lava?", a: false }
+  ],
+  Kuarzit: [
+    { q: "Kuarzit berasal dari batu pasir?", a: true },
+    { q: "Kuarzit ialah batuan igneus?", a: false }
+  ],
 
+  // Batu lain (DISIMPAN)
+  // Basalt: [],
+  // Gneiss: [],
+  // Marble: []
+};
+
+const VALID_QR = Object.keys(QUESTION_BANK);
+
+/* =========================
+   INIT
+========================= */
+function init() {
+  debugLog("Init game");
+  updateUI();
+  startBtn.addEventListener("click", startGame);
+}
+document.addEventListener("DOMContentLoaded", init);
+
+/* =========================
+   UI UPDATE
+========================= */
+function updateUI() {
+  roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
+  scoreText.textContent = score;
+}
+
+/* =========================
+   GAME FLOW
+========================= */
+async function startGame() {
+  debugLog("Game started");
+  score = 0;
+  currentRound = 0;
+  updateUI();
+
+  document.body.className = "scanning game-started";
+  currentState = STATE.SCANNING;
+  cameraStatus.textContent = UI_TEXT.SCANNING;
+
+  await startCamera();
+  scanLoop();
+}
+
+/* =========================
+   CAMERA
+========================= */
 async function startCamera() {
-  log("Camera ON");
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" }
-  });
+  debugLog("Starting camera");
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   video.srcObject = stream;
-  scanning = true;
-  requestAnimationFrame(scanLoop);
+
+  return new Promise(res => {
+    video.onloadedmetadata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      res();
+    };
+  });
 }
 
-function stopCamera() {
-  log("Camera OFF");
-  video.srcObject?.getTracks().forEach(t => t.stop());
-  video.srcObject = null;
-  scanning = false;
-}
-
+/* =========================
+   QR SCAN LOOP
+========================= */
 function scanLoop() {
-  if (!scanning || gameState !== STATE.SCANNING) return;
+  if (currentState !== STATE.SCANNING) return;
 
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const qr = jsQR(img.data, canvas.width, canvas.height);
-    if (qr) onQRScanned(qr.data);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  const qr = jsQR(img.data, img.width, img.height);
+
+  if (qr) {
+    debugLog("QR detected:", qr.data);
+    handleQR(qr.data.trim());
+    return;
   }
+
   requestAnimationFrame(scanLoop);
 }
 
-/* ============================================================
-   7) QR HANDLER (TEXT ONLY)
-============================================================ */
-function onQRScanned(text) {
-  if (gameState !== STATE.SCANNING) return;
-  text = text.trim();
-  log("QR:", text);
+/* =========================
+   QR HANDLER
+========================= */
+function handleQR(payload) {
+  if (!VALID_QR.includes(payload)) {
+    debugLog("QR ignored:", payload);
+    scanLoop();
+    return;
+  }
 
-  if (!QUESTIONS[text]) return; // ignore QR lain
-
-  stopCamera();
-  showQuestion(text);
+  debugLog("Valid QR:", payload);
+  askQuestion(payload);
 }
 
-/* ============================================================
-   8) QUESTION FLOW
-============================================================ */
-function showQuestion(topic) {
-  const q = QUESTIONS[topic];
-  const pick = q[Math.floor(Math.random() * q.length)];
+/* =========================
+   QUESTION LOGIC
+========================= */
+function askQuestion(topic) {
+  currentState = STATE.ANSWERING;
+  document.body.className = "answering";
 
-  correctAnswer = pick.a;
-  el("questionText").textContent = pick.q;
-  el("questionBox").style.display = "block";
+  const set = QUESTION_BANK[topic];
+  const pick = set[Math.floor(Math.random() * set.length)];
 
-  timeLeft = GAME_CONFIG.ANSWER_TIME;
-  txt("timeText", timeLeft);
+  currentAnswer = pick.a;
+  questionText.textContent = pick.q;
+  questionBox.style.display = "block";
 
-  setState(STATE.ANSWERING);
   startTimer();
 }
 
-/* ============================================================
-   9) TIMER
-============================================================ */
+/* =========================
+   TIMER
+========================= */
 function startTimer() {
-  clearInterval(timer);
+  timeLeft = GAME_CONFIG.ANSWER_TIME;
+  timeText.textContent = timeLeft;
+  timeBarFill.style.width = "100%";
+
   timer = setInterval(() => {
     timeLeft--;
-    txt("timeText", timeLeft);
-    el("timeBarFill").style.width =
-      (timeLeft / GAME_CONFIG.ANSWER_TIME) * 100 + "%";
+    timeText.textContent = timeLeft;
+    timeBarFill.style.width = `${(timeLeft / GAME_CONFIG.ANSWER_TIME) * 100}%`;
 
-    if (timeLeft <= 0) handleWrong();
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      handleWrong();
+    }
   }, 1000);
 }
 
-function stopTimer() {
-  clearInterval(timer);
-}
-
-/* ============================================================
-   10) INPUT CALLBACK (DARI input.js)
-============================================================ */
+/* =========================
+   PLAYER INPUT CALLBACK
+   (dipanggil dari input.js)
+========================= */
 window.playerAnswer = function (ans) {
-  if (gameState !== STATE.ANSWERING) return;
-  log("Answer:", ans);
-  ans === correctAnswer ? handleCorrect() : handleWrong();
+  if (currentState !== STATE.ANSWERING) return;
+
+  clearInterval(timer);
+
+  ans === currentAnswer ? handleCorrect() : handleWrong();
 };
 
-/* ============================================================
-   11) BETUL
-============================================================ */
+/* =========================
+   CORRECT
+========================= */
 function handleCorrect() {
-  stopTimer();
-  playSound(SOUND.CORRECT);
+  debugLog("Correct!");
+  audioCorrect.play();
 
-  const gain = Math.max(
-    1,
-    Math.ceil((timeLeft / GAME_CONFIG.ANSWER_TIME) * 20)
+  const earned = Math.max(
+    GAME_CONFIG.SCORE.MIN,
+    Math.min(GAME_CONFIG.SCORE.MAX, timeLeft)
   );
 
-  score += gain;
-  round++;
+  score += earned;
+  currentRound++;
+  updateUI();
 
-  txt("scoreText", score);
-  txt("roundText", `${round} / ${GAME_CONFIG.TOTAL_ROUNDS}`);
+  questionBox.classList.add("question-correct");
 
-  setState(STATE.PAUSE);
-
-  setTimeout(() => {
-    round >= GAME_CONFIG.TOTAL_ROUNDS ? winGame() : nextRound();
-  }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
+  pauseNext();
 }
 
-/* ============================================================
-   12) SALAH / TIMEOUT
-============================================================ */
+/* =========================
+   WRONG / TIMEOUT
+========================= */
 function handleWrong() {
-  stopTimer();
-  playSound(SOUND.WRONG);
+  debugLog("Wrong or timeout");
+  audioWrong.play();
+
+  questionBox.classList.add("question-wrong");
   endGame(false);
 }
 
-/* ============================================================
-   13) NEXT ROUND
-============================================================ */
-function nextRound() {
-  el("questionBox").style.display = "none";
-  setState(STATE.SCANNING);
-  startCamera();
+/* =========================
+   PAUSE & NEXT
+========================= */
+function pauseNext() {
+  currentState = STATE.PAUSE;
+
+  setTimeout(() => {
+    questionBox.className = "question-box";
+    questionBox.style.display = "none";
+
+    if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
+      endGame(true);
+    } else {
+      currentState = STATE.SCANNING;
+      document.body.className = "scanning game-started";
+      cameraStatus.textContent = UI_TEXT.SCANNING;
+      scanLoop();
+    }
+  }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
 }
 
-/* ============================================================
-   14) WIN / END
-============================================================ */
-function winGame() {
-  playSound(SOUND.WIN);
-  endGame(true);
-}
+/* =========================
+   END GAME
+========================= */
+function endGame(win) {
+  currentState = STATE.END;
 
-function endGame() {
-  stopCamera();
-  stopTimer();
-  setState(STATE.END);
-  alert("Permainan Tamat! Markah: " + score);
-}
+  if (win) {
+    audioClap.play();
+    cameraStatus.textContent = UI_TEXT.CONGRATS;
+  } else {
+    cameraStatus.textContent = UI_TEXT.GAME_OVER;
+  }
 
-/* ============================================================
-   15) START GAME
-============================================================ */
-function startGame() {
-  log("START GAME");
-  round = 0;
-  score = 0;
-  txt("scoreText", 0);
-  txt("roundText", `0 / ${GAME_CONFIG.TOTAL_ROUNDS}`);
-  el("questionBox").style.display = "none";
-  setState(STATE.SCANNING);
-  startCamera();
+  document.body.className = "idle";
 }
-
-/* ============================================================
-   16) INIT
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  el("startBtn")?.addEventListener("click", startGame);
-});

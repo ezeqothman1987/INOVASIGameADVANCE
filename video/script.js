@@ -354,4 +354,82 @@ function endGame() {
 
   endModal.style.display = "flex";
 }
+/* ============================================================
+   HALL OF FAME — BATTLE MODE
+============================================================ */
+
+const HOF_KEY_BATTLE = "geoquiz_battle_hof";
+const HOF_MAX = 5;
+
+function loadHOF() {
+  try {
+    return JSON.parse(localStorage.getItem(HOF_KEY_BATTLE)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHOF(list) {
+  localStorage.setItem(HOF_KEY_BATTLE, JSON.stringify(list));
+}
+
+function addToHOFBattle(name, p1, p2) {
+  const hof = loadHOF();
+
+  hof.push({
+    name: name || "Tanpa Nama",
+    p1,
+    p2,
+    total: p1 + p2,
+    date: new Date().toLocaleDateString("ms-MY")
+  });
+
+  hof.sort((a, b) => b.total - a.total);
+  saveHOF(hof.slice(0, HOF_MAX));
+  renderHOFBattle();
+}
+
+function renderHOFBattle() {
+  const ul = document.getElementById("hofList");
+  if (!ul) return;
+
+  ul.innerHTML = "";
+
+  const hof = loadHOF();
+  if (hof.length === 0) {
+    ul.innerHTML = `<li class="hof-empty">Belum ada rekod</li>`;
+    return;
+  }
+
+  hof.forEach((r, i) => {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+
+    li.innerHTML = `
+      <strong>${i + 1}. ${r.name}</strong>
+      <div class="hof-score">
+        P1: ${r.p1} | P2: ${r.p2}
+      </div>
+      <small>${r.date}</small>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+/* =========================
+   BUTTON EVENTS
+========================= */
+document.getElementById("saveHOFBtn")?.addEventListener("click", () => {
+  const name = document.getElementById("playerName").value;
+  addToHOFBattle(name, scoreP1, scoreP2);
+  endModal.style.display = "none";
+});
+
+document.getElementById("clearHOFBtn")?.addEventListener("click", () => {
+  if (!confirm("Padam semua rekod Battle Mode?")) return;
+  localStorage.removeItem(HOF_KEY_BATTLE);
+  renderHOFBattle();
+});
+
+document.addEventListener("DOMContentLoaded", renderHOFBattle);
 

@@ -12,6 +12,12 @@ function debugLog(...args) {
 }
 
 /* =========================
+   SCAN THROTTLE (reduce cpu usage?)
+========================= */
+const SCAN_INTERVAL = 120; // ms → ±8 scan/s
+let lastScanTime = 0;
+
+/* =========================
    DOM REFERENCES
 ========================= */
 const video = document.getElementById("video");
@@ -28,6 +34,9 @@ const timeText = document.getElementById("timeText");
 const questionBox = document.getElementById("questionBox");
 const questionText = document.getElementById("questionText");
 const timeBarFill = document.getElementById("timeBarFill");
+
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const backHomeBtn = document.querySelector(".back-home-btn");
 
 /* =========================
    AUDIO
@@ -190,9 +199,24 @@ function init() {
   if (clearBtn) {
     clearBtn.addEventListener("click", clearHallOfFameQR);
   }
-}
-document.addEventListener("DOMContentLoaded", init);
 
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener("click", toggleFullscreen);
+  }
+
+  if (backHomeBtn) {
+    backHomeBtn.addEventListener("click", goBackHome);
+  }
+//autostop time tuka page?
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      debugLog("Page hidden → stop camera & scan");
+      stopCameraAndScan();
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", init);
 /* =========================
    START BUTTON HANDLER
 ========================= */
@@ -261,10 +285,37 @@ async function startCamera() {
 }
 
 /* =========================
-   QR SCAN LOOP
+   STOP CAMERA & SCAN
 ========================= */
-function scanLoop() {
+function stopCameraAndScan() {
+  debugLog("Stopping camera & scan");
+
+  currentState = STATE.IDLE;
+
+  // Hentikan scan loop
+  // (scanLoop akan auto stop sebab currentState bukan SCANNING)
+  
+  // Hentikan kamera
+  if (video && video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+
+  // Reset canvas (optional tapi elok)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+/* =========================
+   QR SCAN LOOP (THROTTLED)
+========================= */
+function scanLoop(timestamp) {
   if (currentState !== STATE.SCANNING) return;
+
+  //THROTTLE code
+  if (timestamp - lastScanTime < SCAN_INTERVAL) {
+    requestAnimationFrame(scanLoop);
+    return;
+  }
+  lastScanTime = timestamp;
 
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -291,10 +342,11 @@ function handleQR(payload) {
   }
 
   // QR sama → JANGAN scanLoop terus
-  if (usedQR.has(payload)) {
-    showQRBlockedMessage();
-    return;
-  }
+   if (usedQR.has(payload)) {
+     debugLog("QR BLOCKED:", payload);
+     showQRBlockedMessage();
+     return;
+   }
 
   // QR baru
   usedQR.add(payload);
@@ -481,4 +533,27 @@ function resetGame() {
   document.body.className = "idle";
 
   updateUI();
+}
+
+/* =========================
+   UI UTILITIES
+========================= */
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function goBackHome() {
+  if (
+    currentState !== STATE.IDLE &&
+    !confirm("Keluar ke menu utama?")
+  ) {
+    return;
+  }
+
+  window.location.href = "../index.html";
 }

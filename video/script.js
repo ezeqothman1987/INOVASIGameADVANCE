@@ -63,69 +63,76 @@ function playSound(audio) {
   } catch(e) {}
 }
 /* ============================================================
-   HALL OF FAME — GEOQUIZ QR (GAME 1)
-   - Simpan ke localStorage
+   HALL OF FAME — GEOQUIZ QR (2 PLAYER / BATTLE)
+   - Simpan ke localStorage (KEY BARU)
+   - Papar markah P1 & P2
    - Top 5 sahaja
-   - Asing dari game lain
 ============================================================ */
-//CONFIG
-const HOF_KEY = "geoquiz_hall_of_fame"; // KHUSUS GAME 1
-const HOF_MAX = 5;
+
+// CONFIG
+const HOF_BATTLE_KEY = "geoquiz_hall_of_fame_2p";
+const HOF_BATTLE_MAX = 5;
 
 //LOAD
-function loadHallOfFame() {
+function loadHallOfFameBattle() {
   try {
-    return JSON.parse(localStorage.getItem(HOF_KEY)) || [];
+    return JSON.parse(localStorage.getItem(HOF_BATTLE_KEY)) || [];
   } catch (e) {
-    console.warn("HOF load error", e);
+    console.warn("HOF Battle load error", e);
     return [];
   }
 }
 
 //SAVE
-function saveHallOfFame(list) {
-  localStorage.setItem(HOF_KEY, JSON.stringify(list));
+function saveHallOfFameBattle(list) {
+  localStorage.setItem(HOF_BATTLE_KEY, JSON.stringify(list));
 }
 
-//   ADD RECORD
-function addToHallOfFame(playerName, score) {
-  score = Number(score);
+//ADD RECORD
+/*
+  name     → nama pasukan / pemain
+  scoreP1  → markah pemain 1
+  scoreP2  → markah pemain 2
+*/
+function addToHallOfFameBattle(name, scoreP1, scoreP2) {
+  scoreP1 = Number(scoreP1);
+  scoreP2 = Number(scoreP2);
 
-  debugLog("HOF ADD:", playerName, score);
-
-  if (isNaN(score)) {
-    console.warn("HOF: score tidak sah, batal simpan");
+  if (isNaN(scoreP1) || isNaN(scoreP2)) {
+    console.warn("HOF Battle: markah tidak sah");
     return;
   }
 
-  const hof = loadHallOfFame();
+  debugLog("HOF BATTLE ADD:", name, scoreP1, scoreP2);
+
+  const hof = loadHallOfFameBattle();
 
   hof.push({
-    name: playerName?.trim() || "Tanpa Nama",
-    score: score,
+    name: name?.trim() || "Tanpa Nama",
+    scoreP1,
+    scoreP2,
+    total: scoreP1 + scoreP2,
     date: new Date().toLocaleDateString("ms-MY")
   });
 
-  // Susun markah tertinggi di atas
-  hof.sort((a, b) => b.score - a.score);
+  // Susun ikut JUMLAH MARKAH (battle ranking)
+  hof.sort((a, b) => b.total - a.total);
 
   // Simpan top 5 sahaja
-  saveHallOfFame(hof.slice(0, HOF_MAX));
+  saveHallOfFameBattle(hof.slice(0, HOF_BATTLE_MAX));
 
-  renderHallOfFame();
+  renderHallOfFameBattle();
 }
 
 //RENDER UI
-function renderHallOfFame() {
-  const ul = document.getElementById("hofQR");
+function renderHallOfFameBattle() {
+  const ul = document.getElementById("hofBattleList");
   if (!ul) {
-    console.warn("HOF: elemen #hofQR tidak ditemui");
+    console.warn("HOF Battle: elemen #hofBattleList tidak ditemui");
     return;
   }
 
-  console.log("Render HOF");
-
-  const hof = loadHallOfFame();
+  const hof = loadHallOfFameBattle();
   ul.innerHTML = "";
 
   if (hof.length === 0) {
@@ -142,24 +149,38 @@ function renderHallOfFame() {
     li.className = "hof-item";
 
     li.innerHTML = `
-      <strong>${index + 1}. ${item.name}</strong><br>
-      <span>${item.score} markah</span>
-      <small style="opacity:.6"> (${item.date})</small>
+      <div class="hof-name">
+        ${index + 1}. ${item.name}
+      </div>
+      <div class="hof-scores">
+        <span class="p1-score">P1: ${item.scoreP1}</span>
+        <span class="p2-score">P2: ${item.scoreP2}</span>
+      </div>
+      <small style="opacity:.55">(${item.date})</small>
     `;
 
     ul.appendChild(li);
   });
 }
 
-//   CLEAR RECORD (RESET)
-function clearHallOfFameQR() {
-  if (!confirm("Padam semua rekod GeoQuiz?")) return;
+//CLEAR RECORD
+function clearHallOfFameBattle() {
+  if (!confirm("Padam semua rekod Hall of Fame (2 Pemain)?")) return;
 
-  localStorage.removeItem(HOF_KEY);
-  renderHallOfFame();
+  localStorage.removeItem(HOF_BATTLE_KEY);
+  renderHallOfFameBattle();
 
-  debugLog("HOF cleared");
+  debugLog("HOF Battle cleared");
 }
+
+//BIND RESET BUTTON
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("clearHOFBattleBtn");
+  btn?.addEventListener("click", clearHallOfFameBattle);
+
+  renderHallOfFameBattle();
+});
+
 /* =========================
    GAME STATE
 ========================= */
@@ -174,10 +195,16 @@ const STATE = {
 
 let currentState = STATE.IDLE;
 let currentRound = 0;
-let scoreQR = 0;
-let usedQR = new Set(); 
 
+let scoreP1 = 0;
+let scoreP2 = 0;
+
+let answeredP1 = false;
+let answeredP2 = false;
+
+let usedQR = new Set();
 let currentAnswer = null;
+
 let timer = null;
 let timeLeft = 0;
 
@@ -246,7 +273,8 @@ function handleStartButton() {
 ========================= */
 function updateUI() {
   roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
-  scoreText.textContent = scoreQR;
+  scoreP1Text.textContent = scoreP1;
+  scoreP2Text.textContent = scoreP2;
 
   if (currentState === STATE.IDLE || currentState === STATE.END) {
     startBtn.textContent = "MULA PERMAINAN";
@@ -260,7 +288,8 @@ function updateUI() {
 ========================= */
 async function startGame() {
   debugLog("Game started");
-  scoreQR = 0;
+  scoreP1 = 0;
+  scoreP2 = 0;
   currentRound = 0;
   usedQR.clear();
   updateUI();
@@ -387,6 +416,8 @@ function askQuestion(topic) {
   currentState = STATE.ANSWERING;
   updateStartButtonLock();
   document.body.className = "answering";
+  answeredP1 = false;
+  answeredP2 = false;
 
   const set = QUESTION_BANK[topic];
   const pick = set[Math.floor(Math.random() * set.length)];
@@ -419,101 +450,72 @@ function startTimer() {
 }
 
 /* =========================
-   PLAYER INPUT CALLBACK
-   (dipanggil dari input.js)
+   PLAYER INPUT
+   dipanggil dari input.js
 ========================= */
-window.playerAnswer = function (ans) {
+window.playerAnswer = function (player, ans) {
   if (currentState !== STATE.ANSWERING) return;
 
-  clearInterval(timer);
+  if (player === 1 && answeredP1) return;
+  if (player === 2 && answeredP2) return;
 
-  ans === currentAnswer ? handleCorrect() : handleWrong();
+  const correct = ans === currentAnswer;
+  const score = correct ? 10 + timeLeft : 0;
+
+  if (player === 1) {
+    answeredP1 = true;
+    scoreP1 += score;
+  }
+
+  if (player === 2) {
+    answeredP2 = true;
+    scoreP2 += score;
+  }
+
+  updateUI();
+
+  if (answeredP1 && answeredP2) {
+    clearInterval(timer);
+    timer = null;
+    handleRoundEnd();
+  }
 };
 
 /* =========================
-   CORRECT
+   ROUND END HANDLER
+   - Dipanggil bila P1 & P2 selesai jawab
 ========================= */
-function handleCorrect() {
-  debugLog("Correct!");
-  playSound(soundCorrect);
-
-  const earned = Math.max(
-    GAME_CONFIG.SCORE.MIN,
-    Math.min(GAME_CONFIG.SCORE.MAX, timeLeft)
-  );
-
-  scoreQR += earned;
+function handleRoundEnd() {
   currentRound++;
   updateUI();
 
-  questionBox.classList.add("question-correct");
-  pauseNext();
-}
+  questionBox.className = "question-box";
+  questionBox.style.display = "none";
 
-/* =========================
-   WRONG / TIMEOUT
-========================= */
-function handleWrong() {
-  debugLog("Wrong or timeout");
-  playSound(soundWrong);
-
-  questionBox.classList.add("question-wrong");
-  endGame(false);
-}
-
-/* =========================
-   PAUSE & NEXT
-========================= */
-function pauseNext() {
-  currentState = STATE.PAUSE;
-  updateStartButtonLock();
-
-  setTimeout(() => {
-    questionBox.className = "question-box";
-    questionBox.style.display = "none";
-
-    if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
-      endGame(true);
-    } else {
-      currentState = STATE.SCANNING;
-      document.body.className = "scanning game-started";
-      cameraStatus.textContent = UI_TEXT.SCANNING;
-      scanLoop();
-    }
-  }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
-}
-
-/* =========================
-   END GAME
-========================= */
-function endGame(win) {
-  currentState = STATE.END;
-   updateStartButtonLock();
-   usedQR.clear(); // optional safety
-   if (video.srcObject) {
-  video.srcObject.getTracks().forEach(t => t.stop());
-  video.srcObject = null;
-}
-
-  if (win) {
-    playSound(audioClap);
-    cameraStatus.textContent = UI_TEXT.CONGRATS;
-     setTimeout(() => {
-    const name = prompt("Masukkan nama untuk Hall of Fame:");
-    addToHallOfFame(name, scoreQR);
-  }, 300);
-  } else {
-    cameraStatus.textContent = UI_TEXT.GAME_OVER;
+  // Tamat game jika cukup round
+  if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
+    endGame();
+    return;
   }
 
-  document.body.className = "idle";
+  // Reset untuk round seterusnya
+  answeredP1 = false;
+  answeredP2 = false;
+  currentAnswer = null;
+
+  currentState = STATE.SCANNING;
+  document.body.className = "scanning game-started";
+  cameraStatus.textContent = UI_TEXT.SCANNING;
+
+  scanLoop();
 }
 
 /* =========================
-   RESET GAME
+   END GAME (2 PLAYER)
 ========================= */
-function resetGame() {
-  debugLog("Reset game");
+function endGame() {
+  currentState = STATE.END;
+  updateStartButtonLock();
 
   // Hentikan timer
   if (timer) {
@@ -522,20 +524,60 @@ function resetGame() {
   }
 
   // Hentikan kamera
-  if (video.srcObject) {
+  if (video?.srcObject) {
     video.srcObject.getTracks().forEach(t => t.stop());
     video.srcObject = null;
   }
 
-  // Reset state & data
+  usedQR.clear();
+
+  cameraStatus.textContent = "Permainan Tamat";
+
+  document.body.className = "idle";
+
+  // Simpan ke Hall of Fame (P1 vs P2)
+  setTimeout(() => {
+    const nameP1 = prompt("Nama Pemain 1:");
+    const nameP2 = prompt("Nama Pemain 2:");
+
+    if (nameP1 || nameP2) {
+      addToHallOfFameBattle(
+        nameP1 || "Pemain 1",
+        scoreP1,
+        nameP2 || "Pemain 2",
+        scoreP2
+      );
+    }
+  }, 300);
+}
+
+/* =========================
+   RESET GAME
+========================= */
+function resetGame() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  if (video?.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+
   currentState = STATE.IDLE;
   updateStartButtonLock();
+
   currentRound = 0;
-  scoreQR = 0;
+  scoreP1 = 0;
+  scoreP2 = 0;
+
+  answeredP1 = false;
+  answeredP2 = false;
+
   usedQR.clear();
   currentAnswer = null;
 
-  // Reset UI
   questionBox.style.display = "none";
   questionBox.className = "question-box";
   cameraStatus.textContent = UI_TEXT.IDLE;
@@ -543,7 +585,6 @@ function resetGame() {
 
   updateUI();
 }
-
 /* =========================
    UI UTILITIES
 ========================= */

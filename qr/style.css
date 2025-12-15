@@ -378,4 +378,13 @@ body.game-started .sidebar {
     transform: scale(1) translateY(0);
   }
 }
-
+.question-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 6px 6px;
+  pointer-events: none;
+}

@@ -1,144 +1,95 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <!-- ==========================
-       META
-  ========================== -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GeoQuiz QR</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoQuiz</title>
 
-  <!-- ==========================
-       CSS & ICON
-  ========================== -->
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="static/qr_images/favicon.png">
+  <!-- STYLE -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="idle">
+  <!-- FULLSCREEN & BACK -->
+  <div id="fullscreenBtn">Fullscreen</div>
+  <div class="back-home-btn">Home</div>
 
-<!-- ==========================
-     FULLSCREEN & BACK HOME
-========================== -->
-<div id="fullscreenBtn" class="fullscreen-btn">⛶ Fullscreen</div>
-<div id="backHomeBtn" class="back-home-btn">🏠 Menu Utama</div>
+  <!-- HALL OF FAME (KEKAL) -->
+  <aside class="sidebar">
+    <h3>Hall of Fame</h3>
+    <div id="hofList"></div>
+  </aside>
 
-<!-- ==========================
-     HALL OF FAME (SIDEBAR)
-========================== -->
-<div id="hallOfFameSidebar" class="sidebar">
-  <div class="hof-box">
-    <h2>🏆 Hall of Fame</h2>
+  <!-- APP -->
+  <div class="app-container">
 
-    <!-- RESET (CONFIRM ONLY) -->
-    <button id="clearHOFBtn" class="clear-hof-btn">
-      Reset Rekod
-    </button>
+    <!-- TITLE -->
+    <h1 class="title">GEOQUIZ</h1>
 
-    <ul id="hofList"></ul>
-  </div>
-</div>
+    <!-- TOP CONTROL -->
+    <div class="arduino-toggle">
+      <button id="startBtn" class="start-btn">MULA PERMAINAN</button>
+      <button id="connectArduinoBtn">CONNECT CONTROLLER</button>
+      <span id="arduinoStatus">DISCONNECTED</span>
+    </div>
 
-<!-- ==========================
-     MAIN APP
-========================== -->
-<div class="app-container">
+    <!-- CAMERA / SCANNER (SAIZ KEKAL) -->
+    <div class="video-box">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="qr-canvas"></canvas>
 
-  <!-- TITLE -->
-  <h1 class="title">🪨 GEOQUIZ QR 🪨</h1>
-
-  <!-- CONTROL BAR -->
-  <div class="arduino-toggle">
-    <label>
-      <input type="checkbox" id="arduinoMode">
-      Arduino Mode
-    </label>
-
-    <button id="connectArduinoBtn">Connect Arduino</button>
-
-    <button id="startScanBtn" class="start-btn">
-      🎮 Mula Bermain
-    </button>
-  </div>
-
-  <!-- CAMERA -->
-  <div class="video-box">
-    <video id="video" playsinline muted></video>
-
-    <div id="scannerOverlay" class="scanner-overlay" style="display:none;">
-      <div class="scan-area">
-        <div class="scan-line"></div>
-        <div class="scan-corner top-left"></div>
-        <div class="scan-corner top-right"></div>
-        <div class="scan-corner bottom-left"></div>
-        <div class="scan-corner bottom-right"></div>
+      <!-- OVERLAY -->
+      <div class="scanner-overlay">
+        <div class="scan-area">
+          <div class="scan-line"></div>
+        </div>
       </div>
     </div>
 
-    <canvas id="qr-canvas" hidden></canvas>
-
-    <div id="cameraStatus" class="camera-status">
-      Sila Tekan “Mula Bermain”
+    <!-- CAMERA STATUS -->
+    <div class="camera-status" id="cameraStatus">
+      Tekan mula untuk imbas QR
     </div>
-  </div>
 
-  <!-- INFO PANEL -->
-  <div class="info-panel">
-    <div class="label">Status</div>
-    <div id="rockName" class="value">–</div>
-
-    <div class="label">⏰ Masa</div>
-    <div id="timer" class="value">–</div>
-
-    <div class="label">⭐ Markah</div>
-    <div id="score" class="value">0</div>
-  </div>
-
-  <!-- ANSWER BUTTONS -->
-  <div class="button-panel">
-    <button id="btnCorrect" class="cat-btn correct">BETUL</button>
-    <button id="btnWrong" class="cat-btn wrong">SALAH</button>
-  </div>
-</div>
-
-<!-- ==========================
-     END GAME MODAL
-========================== -->
-<div id="endModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <h2>🎉 Tamat Permainan!</h2>
-
-    <p>
-      Markah Anda:
-      <strong><span id="finalScore"></span></strong>
-    </p>
-
-    <input
-      id="playerName"
-      placeholder="Masukkan Nama Anda"
-      maxlength="20"
-    >
-
-    <div class="modal-buttons">
-      <button onclick="saveHallOfFame()">
-        💾 Simpan Rekod
-      </button>
-
-      <button onclick="resetGame()">
-        🔄 Main Lagi
-      </button>
+    <!-- INFO PANEL -->
+    <div class="info-panel">
+      <div>
+        <div class="label">PUSINGAN</div>
+        <div class="value" id="roundText">0 / 5</div>
+      </div>
+      <div>
+        <div class="label">MARKAH</div>
+        <div class="value" id="scoreText">0</div>
+      </div>
+      <div>
+        <div class="label">MASA</div>
+        <div class="value" id="timeText">--</div>
+      </div>
     </div>
+
+    <!-- QUESTION BOX (FOCUS UTAMA) -->
+    <div id="questionBox" class="question-box" style="display:none;">
+      <div id="questionText">
+        Soalan akan dipaparkan di sini
+      </div>
+
+      <!-- TIME BAR -->
+      <div class="time-bar">
+        <div id="timeBarFill"></div>
+      </div>
+    </div>
+
+    <!-- ANSWER BUTTONS -->
+    <div class="button-panel">
+      <button id="btnCorrect" class="cat-btn correct">A</button>
+      <button id="btnWrong" class="cat-btn wrong">B</button>
+    </div>
+
   </div>
-</div>
 
-<!-- ==========================
-     JS LOAD ORDER (WAJIB)
-========================== -->
-
-<script src="gameData.js"></script>
-<script src="jsQR.js"></script>
-<script src="script.js"></script>
-<script src="input.js"></script>
-
+  <!-- SCRIPT (AKAN DIISI SETERUSNYA) -->
+  <script src="gameData.js"></script>
+  <script src="input.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

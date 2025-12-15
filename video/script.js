@@ -52,15 +52,15 @@ const finalScoreP2 = document.getElementById("finalScoreP2");
 //const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
 //const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
 //const audioClap    = new Audio(`${AUDIO_PATH}clap.mp3`);
-//const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
+const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
 
-//function playSound(audio) {
-//  if (!audio) return;
-//  try {
-//    audio.currentTime = 0;
-//    audio.play().catch(() => {});
-//  } catch(e) {}
-//}
+function playSound(audio) {
+  if (!audio) return;
+  try {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  } catch(e) {}
+}
 /* ============================================================
    HALL OF FAME — GEOQUIZ QR (2 PLAYER / BATTLE)
    - Simpan ke localStorage (KEY BARU)

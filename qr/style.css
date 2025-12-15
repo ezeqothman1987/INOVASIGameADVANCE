@@ -453,3 +453,19 @@ body.game-started .sidebar {
   border-bottom: 1px dashed rgba(255,255,255,0.2);
   font-size: 0.9rem;
 }
+
+.hof-reset-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 6px;
+  font-size: 0.85rem;
+  background: #5a2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hof-reset-btn:hover {
+  background: #7a2a2a;
+}

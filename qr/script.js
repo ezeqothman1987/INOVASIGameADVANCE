@@ -162,21 +162,60 @@ let timer = null;
 let timeLeft = 0;
 
 /* =========================
+   FUNGS HELPER
+========================= */
+function updateStartButtonLock() {
+  if (currentState === STATE.ANSWERING || currentState === STATE.PAUSE) {
+    startBtn.disabled = true;
+    startBtn.classList.add("btn-locked");
+  } else {
+    startBtn.disabled = false;
+    startBtn.classList.remove("btn-locked");
+  }
+}
+/* =========================
    INIT
 ========================= */
 function init() {
   debugLog("Init game");
   updateUI();
-  startBtn.addEventListener("click", startGame);
+
+  // x terus startGame
+  startBtn.addEventListener("click", handleStartButton);
+
+  renderHallOfFame(); // optional tapi disyorkan
 }
+
 document.addEventListener("DOMContentLoaded", init);
 
+/* =========================
+   START BUTTON HANDLER
+========================= */
+function handleStartButton() {
+  if (currentState === STATE.IDLE || currentState === STATE.END) {
+    startGame();
+    startBtn.textContent = "HENTIKAN";
+    return;
+  }
+
+  // Game sedang berjalan
+  const confirmStop = confirm("Anda pasti mahu menghentikan permainan?");
+  if (confirmStop) {
+    resetGame();
+  }
+}
 /* =========================
    UI UPDATE
 ========================= */
 function updateUI() {
   roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
   scoreText.textContent = scoreQR;
+
+  if (currentState === STATE.IDLE || currentState === STATE.END) {
+    startBtn.textContent = "MULA PERMAINAN";
+  } else {
+    startBtn.textContent = "HENTIKAN PERMAINAN";
+  }
 }
 
 /* =========================
@@ -192,6 +231,7 @@ async function startGame() {
 
   document.body.className = "scanning game-started";
   currentState = STATE.SCANNING;
+  updateStartButtonLock();
   cameraStatus.textContent = UI_TEXT.SCANNING;
 
   await startCamera();
@@ -279,6 +319,7 @@ function showQRBlockedMessage() {
 ========================= */
 function askQuestion(topic) {
   currentState = STATE.ANSWERING;
+  updateStartButtonLock();
   document.body.className = "answering";
 
   const set = QUESTION_BANK[topic];
@@ -359,6 +400,7 @@ function handleWrong() {
 ========================= */
 function pauseNext() {
   currentState = STATE.PAUSE;
+  updateStartButtonLock();
 
   setTimeout(() => {
     questionBox.className = "question-box";
@@ -380,6 +422,7 @@ function pauseNext() {
 ========================= */
 function endGame(win) {
   currentState = STATE.END;
+   updateStartButtonLock();
    usedQR.clear(); // optional safety
    if (video.srcObject) {
   video.srcObject.getTracks().forEach(t => t.stop());
@@ -398,4 +441,39 @@ function endGame(win) {
   }
 
   document.body.className = "idle";
+}
+
+/* =========================
+   RESET GAME
+========================= */
+function resetGame() {
+  debugLog("Reset game");
+
+  // Hentikan timer
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  // Hentikan kamera
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+
+  // Reset state & data
+  currentState = STATE.IDLE;
+  updateStartButtonLock();
+  currentRound = 0;
+  scoreQR = 0;
+  usedQR.clear();
+  currentAnswer = null;
+
+  // Reset UI
+  questionBox.style.display = "none";
+  questionBox.className = "question-box";
+  cameraStatus.textContent = UI_TEXT.IDLE;
+  document.body.className = "idle";
+
+  updateUI();
 }

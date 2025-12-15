@@ -349,3 +349,113 @@ body.scanning .scanner-overlay {
 .p2-score {
   color: #8ecaff;       /* Skor Player 2 */
 }
+/* ============================================================
+   13) HALL OF FAME – SLIDER KANAN (QR / 1 PLAYER)
+   TAMBAHAN SAHAJA – TAK GANGGU STYLE SEDIA ADA
+============================================================ */
+
+#hofQRList {
+  position: fixed;
+  top: 90px;
+  right: -240px;              /* SOROK SEPARUH */
+
+  width: 280px;
+  max-height: 72vh;
+  overflow-y: auto;
+
+  padding: 16px 14px 18px;
+
+  background:
+    linear-gradient(145deg, #ecfff3, #d7f5e3);
+
+  border-radius: 26px 0 0 26px;
+
+  box-shadow:
+    -10px 0 24px rgba(0,0,0,0.35),
+    inset 0 0 0 3px rgba(255,255,255,0.75);
+
+  z-index: 999;
+  transition: right 0.35s ease;
+}
+
+/* ===== SLIDE KELUAR BILA HOVER ===== */
+#hofQRList:hover {
+  right: 0;
+}
+
+/* ============================================================
+   TAB PENARIK (IKON 🏆)
+============================================================ */
+#hofQRList::before {
+  content: "🏆";
+  position: absolute;
+  left: -50px;
+  top: 38%;
+
+  width: 50px;
+  height: 100px;
+
+  background:
+    linear-gradient(180deg, #51cf66, #2fb344);
+
+  color: #0b4d2b;
+  font-size: 1.4rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 22px 0 0 22px;
+
+  box-shadow:
+    -6px 0 14px rgba(0,0,0,0.35),
+    inset 0 0 0 3px rgba(255,255,255,0.65);
+}
+
+/* ============================================================
+   ITEM DALAM HOF (QR)
+============================================================ */
+#hofQRList .hof-item {
+  background:
+    linear-gradient(135deg, #ffffffee, #e6fff0);
+
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+
+  font-size: 0.85rem;
+  color: #1f3d2b;
+
+  box-shadow:
+    0 6px 14px rgba(0,0,0,0.15),
+    inset 0 0 0 2px rgba(255,255,255,0.75);
+}
+
+/* TOP 3 RANK */
+#hofQRList .hof-item:nth-child(1) {
+  border-left: 6px solid #ffd43b;
+}
+#hofQRList .hof-item:nth-child(2) {
+  border-left: 6px solid #ced4da;
+}
+#hofQRList .hof-item:nth-child(3) {
+  border-left: 6px solid #d08c60;
+}
+
+/* ============================================================
+   TEKS DALAM ITEM
+============================================================ */
+#hofQRList .hof-name {
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: #0b5d3b;
+}
+
+/* ============================================================
+   MOBILE – AUTO SOROK
+============================================================ */
+@media (max-width: 900px) {
+  #hofQRList {
+    display: none;
+  }
+}

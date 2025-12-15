@@ -56,21 +56,35 @@
       Tekan mula untuk imbas QR
     </div>
 
-    <!-- INFO PANEL -->
-    <div class="info-panel">
-      <div>
-        <div class="label">🔁PUSINGAN</div>
-        <div class="value" id="roundText">0 / 5</div>
-      </div>
-      <div>
-        <div class="label">🌟MARKAH</div>
-        <div class="value" id="scoreText">0</div>
-      </div>
-      <div>
-        <div class="label">⏱️MASA</div>
-        <div class="value" id="timeText">--</div>
-      </div>
+ <!-- INFO PANEL -->
+<div class="info-panel">
+
+  <!-- ROW 1 : ROUND -->
+  <div class="info-row round-row">
+    <div class="label">🔁 PUSINGAN</div>
+    <div class="value" id="roundText">0 / 5</div>
+  </div>
+
+  <!-- ROW 2 : SCORE + TIME -->
+  <div class="info-row battle-row">
+    
+    <div class="info-box">
+      <div class="label">👤 P1</div>
+      <div class="value" id="scoreP1Text">0</div>
     </div>
+
+    <div class="info-box">
+      <div class="label">⏱️ MASA</div>
+      <div class="value" id="timeText">--</div>
+    </div>
+
+    <div class="info-box">
+      <div class="label">👤 P2</div>
+      <div class="value" id="scoreP2Text">0</div>
+    </div>
+
+  </div>
+</div>
 
     <!-- QUESTION BOX (FOCUS UTAMA) -->
     <div id="questionBox" class="question-box" style="display:none;">
@@ -84,11 +98,22 @@
       </div>
     </div>
 
-    <!-- ANSWER BUTTONS -->
-    <div class="button-panel">
-      <button id="btnCorrect" class="cat-btn correct">A</button>
-      <button id="btnWrong" class="cat-btn wrong">B</button>
-    </div>
+<!-- ANSWER BUTTONS -->
+<div class="button-panel battle-buttons">
+
+  <!-- PLAYER 1 -->
+  <div class="player-buttons p1">
+    <button id="btnP1A" class="cat-btn p1-btn">A</button>
+    <button id="btnP1B" class="cat-btn p1-btn">B</button>
+  </div>
+
+  <!-- PLAYER 2 -->
+  <div class="player-buttons p2">
+    <button id="btnP2Left" class="cat-btn p2-btn">⬅️</button>
+    <button id="btnP2Right" class="cat-btn p2-btn">➡️</button>
+  </div>
+
+</div>
 
   </div>
 

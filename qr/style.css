@@ -431,3 +431,18 @@ body.game-started .sidebar {
   background: linear-gradient(90deg, #90dbf4, #ffb703);
   transition: width 0.9s linear;
 }
+/* ============================================================
+   HOF
+============================================================ */
+.hof-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hof-item {
+  padding: 8px 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px dashed rgba(255,255,255,0.2);
+  font-size: 0.9rem;
+}

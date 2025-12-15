@@ -15,7 +15,7 @@ const GAME_CONFIG = {
   PAUSE_AFTER_CORRECT: 3,   // Pause lepas betul (saat)
 
   SCORE: {
-    MAX: 10,
+    MAX: 20,
     MIN: 1
   }
 };

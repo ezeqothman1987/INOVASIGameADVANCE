@@ -148,6 +148,7 @@ const STATE = {
   SCANNING: "scanning",
   ANSWERING: "answering",
   PAUSE: "pause",
+  QR_BLOCKED: "qr_blocked",
   END: "end"
 };
 
@@ -243,18 +244,34 @@ function handleQR(payload) {
     scanLoop();
     return;
   }
-  // QR dah pernah digunakan
+
+  // QR sama → JANGAN scanLoop terus
   if (usedQR.has(payload)) {
-    debugLog("QR ignored (already used):", payload);
-    scanLoop();
+    showQRBlockedMessage();
     return;
   }
 
-  // Tandakan QR ini telah digunakan
+  // QR baru
   usedQR.add(payload);
 
   debugLog("QR accepted:", payload);
   askQuestion(payload);
+}
+
+ // Paus kalau guna QR sama-elak loop dan hanged
+function showQRBlockedMessage() {
+  currentState = STATE.QR_BLOCKED;
+  cameraStatus.textContent = "QR ini sudah digunakan. Sila scan batuan lain";
+
+  debugLog("QR BLOCKED: sama dengan yang telah digunakan");
+
+  setTimeout(() => {
+    if (currentState === STATE.QR_BLOCKED) {
+      currentState = STATE.SCANNING;
+      cameraStatus.textContent = UI_TEXT.SCANNING;
+      scanLoop();
+    }
+  }, 1200);
 }
 
 /* =========================

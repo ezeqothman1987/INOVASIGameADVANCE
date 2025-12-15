@@ -230,7 +230,7 @@ window.playerAnswer = function (ans) {
 ========================= */
 function handleCorrect() {
   debugLog("Correct!");
-  audioCorrect.play();
+  playSound(soundCorrect);
 
   const earned = Math.max(
     GAME_CONFIG.SCORE.MIN,
@@ -242,7 +242,6 @@ function handleCorrect() {
   updateUI();
 
   questionBox.classList.add("question-correct");
-
   pauseNext();
 }
 
@@ -251,7 +250,7 @@ function handleCorrect() {
 ========================= */
 function handleWrong() {
   debugLog("Wrong or timeout");
-  audioWrong.play();
+  playSound(soundWrong);
 
   questionBox.classList.add("question-wrong");
   endGame(false);
@@ -285,7 +284,7 @@ function endGame(win) {
   currentState = STATE.END;
 
   if (win) {
-    audioClap.play();
+    playSound(audioClap);
     cameraStatus.textContent = UI_TEXT.CONGRATS;
   } else {
     cameraStatus.textContent = UI_TEXT.GAME_OVER;

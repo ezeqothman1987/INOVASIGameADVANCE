@@ -1,5 +1,10 @@
-const HOF_QR_KEY = "HOF_QR";
-const HOF_VIDEO_KEY = "hof_video";
+/* =========================
+   HALL OF FAME — INDEX PAGE
+========================= */
+
+// KEY MESTI SAMA DENGAN GAME
+const HOF_QR_KEY = "geoquiz_hall_of_fame";
+const HOF_BATTLE_KEY = "geoquiz_hall_of_fame_2p";
 
 /* =========================
    NAVIGATION
@@ -17,9 +22,12 @@ function goVideo() {
 ========================= */
 function loadHOF() {
   loadQRHOF();
-  loadVideoHOF();
+  loadBattleHOF();
 }
 
+/* =========================
+   SOLO (QR)
+========================= */
 function loadQRHOF() {
   const list = document.getElementById("hofQR");
   if (!list) return;
@@ -34,6 +42,7 @@ function loadQRHOF() {
 
   hof.slice(0, 3).forEach((r, i) => {
     const li = document.createElement("li");
+    li.className = "hof-item";
     li.innerHTML = `
       <strong>${i + 1}. ${r.name}</strong>
       <span>${r.score} markah</span>
@@ -42,15 +51,14 @@ function loadQRHOF() {
   });
 }
 
-function loadVideoHOF() {
-  const list = document.getElementById("hofVideo");
+/* =========================
+   2 PLAYER / BATTLE
+========================= */
+function loadBattleHOF() {
+  const list = document.getElementById("hofBattleList");
   if (!list) return;
-  // cuba baca dari dua tempat
-  const rawVideo1 = localStorage.getItem(HOF_VIDEO_KEY);  // hof_video
-  const rawVideo2 = localStorage.getItem("HOF_KEY");      // key lama
-  const raw = rawVideo1 || rawVideo2;
 
-  const hof = raw ? JSON.parse(raw) : [];
+  const hof = JSON.parse(localStorage.getItem(HOF_BATTLE_KEY) || "[]");
   list.innerHTML = "";
 
   if (hof.length === 0) {
@@ -60,24 +68,24 @@ function loadVideoHOF() {
 
   hof.slice(0, 3).forEach((r, i) => {
     const li = document.createElement("li");
+    li.className = "hof-item";
     li.innerHTML = `
       <strong>${i + 1}. ${r.name}</strong>
       <div class="hof-sub">
-         ${r.scoreP1}markah&nbsp|&nbsp;${r.scoreP2}markah
+        P1: ${r.scoreP1} markah &nbsp;|&nbsp; P2: ${r.scoreP2} markah
       </div>
     `;
     list.appendChild(li);
   });
 }
 
+/* =========================
+   INIT & AUTO REFRESH
+========================= */
 document.addEventListener("DOMContentLoaded", loadHOF);
 
-/* =========================
-   AUTO REFRESH MAIN PAGE
-========================= */
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
-    console.log("Page active again → refresh HOF");
     loadHOF();
   }
 });

@@ -64,7 +64,7 @@ const players = {
 ========================= */
 function initBattle() {
   debugLog("Init Battle Mode");
-
+}
 function updateUI() {
   if (roundText) {
     roundText.textContent = currentRound;
@@ -82,7 +82,6 @@ function updateUI() {
     scoreP2Text.textContent = scoreP2;
   }
 }
-
 document.addEventListener("DOMContentLoaded", initBattle);
 
 /* =========================

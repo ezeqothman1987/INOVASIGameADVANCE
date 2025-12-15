@@ -1,33 +1,28 @@
 /* ============================================================
-   script.js — GEOQUIZ TEXT QR (v2 FINAL)
+   script.js — GEOQUIZ TEXT QR (HTML-SYNC VERSION)
 ============================================================ */
 
 /* ============================================================
    0) DEBUG MODE
-   true  → papar console log
-   false → senyap
 ============================================================ */
 const DEBUG = false;
-const debug = (...args) => DEBUG && console.log("[DEBUG]", ...args);
+const log = (...a) => DEBUG && console.log("[DEBUG]", ...a);
 
 /* ============================================================
-   1) CONSTANT & AUDIO
+   1) AUDIO (ROOT /static/sound)
 ============================================================ */
 const SOUND = {
-  CORRECT: new Audio("static/sound/yay.mp3"),
-  WRONG:   new Audio("static/sound/boo.mp3"),
-  WIN:     new Audio("static/sound/clap.mp3")
+  CORRECT: new Audio("../static/sound/yay.mp3"),
+  WRONG:   new Audio("../static/sound/boo.mp3"),
+  WIN:     new Audio("../static/sound/clap.mp3")
 };
 
-function playSound(aud) {
-  try {
-    aud.currentTime = 0;
-    aud.play();
-  } catch {}
+function playSound(a) {
+  try { a.currentTime = 0; a.play(); } catch {}
 }
 
 /* ============================================================
-   2) GAME STATE
+   2) STATE MACHINE
 ============================================================ */
 const STATE = {
   IDLE: "IDLE",
@@ -38,128 +33,94 @@ const STATE = {
 };
 
 let gameState = STATE.IDLE;
-function setState(s) {
+const setState = s => {
   gameState = s;
-  debug("STATE →", s);
-}
+  document.body.className = s.toLowerCase();
+  log("STATE →", s);
+};
 
 /* ============================================================
-   3) GAME DATA (SOALAN)
-   ▶ 3 aktif, selebihnya DISIMPAN
+   3) QUESTION BANK (3 AKTIF)
 ============================================================ */
-const QUESTION_BANK = {
+const QUESTIONS = {
   Granit: [
-    {
-      q: "Granit ialah batuan jenis igneus?",
-      a: true
-    },
-    {
-      q: "Granit terbentuk melalui pemendapan?",
-      a: false
-    }
+    { q: "Granit ialah batuan igneus.", a: true },
+    { q: "Granit terbentuk melalui pemendapan.", a: false }
   ],
-
   Syis: [
-    {
-      q: "Syis ialah batuan metamorf?",
-      a: true
-    },
-    {
-      q: "Syis terbentuk daripada lava?",
-      a: false
-    }
+    { q: "Syis ialah batuan metamorf.", a: true },
+    { q: "Syis ialah batuan igneus.", a: false }
   ],
-
   Kuarzit: [
-    {
-      q: "Kuarzit berasal daripada batu pasir?",
-      a: true
-    },
-    {
-      q: "Kuarzit ialah batuan igneus?",
-      a: false
-    }
+    { q: "Kuarzit berasal daripada batu pasir.", a: true },
+    { q: "Kuarzit ialah batuan sedimen.", a: false }
   ]
-
-  // ===== SIMPAN UNTUK MASA DEPAN =====
-  // BatuKapur: [],
-  // Gneiss: [],
-  // Basalt: [],
+  // Lain DISIMPAN
 };
 
 /* ============================================================
    4) DOM HELPER
 ============================================================ */
 const el = id => document.getElementById(id);
-const setText = (id, t) => el(id) && (el(id).textContent = t);
+const txt = (id, v) => el(id) && (el(id).textContent = v);
 
 /* ============================================================
    5) GAME VARIABLE
 ============================================================ */
-let roundCount = 0;
+let round = 0;
 let score = 0;
 let timer = null;
 let timeLeft = 0;
-
-let currentAnswer = null;
+let correctAnswer = null;
 
 /* ============================================================
-   6) CAMERA & QR SCAN
-   (LOGIK ASAL KEKAL)
+   6) CAMERA & QR
 ============================================================ */
-let scanning = false;
 const video = el("video");
 const canvas = el("qr-canvas");
 const ctx = canvas.getContext("2d");
+let scanning = false;
 
 async function startCamera() {
-  debug("Camera start");
+  log("Camera ON");
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" }
   });
   video.srcObject = stream;
-  await video.play();
   scanning = true;
   requestAnimationFrame(scanLoop);
 }
 
 function stopCamera() {
-  debug("Camera stop");
+  log("Camera OFF");
   video.srcObject?.getTracks().forEach(t => t.stop());
   video.srcObject = null;
   scanning = false;
 }
 
 function scanLoop() {
-  if (!scanning || gameState !== STATE.SCANNING) {
-    requestAnimationFrame(scanLoop);
-    return;
-  }
+  if (!scanning || gameState !== STATE.SCANNING) return;
 
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
-
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(img.data, canvas.width, canvas.height);
-
-    if (code) onQRScanned(code.data);
+    const qr = jsQR(img.data, canvas.width, canvas.height);
+    if (qr) onQRScanned(qr.data);
   }
-
   requestAnimationFrame(scanLoop);
 }
 
 /* ============================================================
-   7) QR SCANNED (TEXT ONLY)
+   7) QR HANDLER (TEXT ONLY)
 ============================================================ */
-function onQRScanned(payload) {
+function onQRScanned(text) {
   if (gameState !== STATE.SCANNING) return;
+  text = text.trim();
+  log("QR:", text);
 
-  const text = payload.trim();
-  debug("QR:", text);
-
-  if (!QUESTION_BANK[text]) return; // IGNORE QR LAIN
+  if (!QUESTIONS[text]) return; // ignore QR lain
 
   stopCamera();
   showQuestion(text);
@@ -169,16 +130,15 @@ function onQRScanned(payload) {
    8) QUESTION FLOW
 ============================================================ */
 function showQuestion(topic) {
-  const list = QUESTION_BANK[topic];
-  const pick = list[Math.floor(Math.random() * list.length)];
+  const q = QUESTIONS[topic];
+  const pick = q[Math.floor(Math.random() * q.length)];
 
-  currentAnswer = pick.a;
-
+  correctAnswer = pick.a;
   el("questionText").textContent = pick.q;
   el("questionBox").style.display = "block";
 
   timeLeft = GAME_CONFIG.ANSWER_TIME;
-  setText("timer", timeLeft);
+  txt("timeText", timeLeft);
 
   setState(STATE.ANSWERING);
   startTimer();
@@ -189,16 +149,13 @@ function showQuestion(topic) {
 ============================================================ */
 function startTimer() {
   clearInterval(timer);
-
   timer = setInterval(() => {
-    if (gameState !== STATE.ANSWERING) return;
-
     timeLeft--;
-    setText("timer", timeLeft);
+    txt("timeText", timeLeft);
+    el("timeBarFill").style.width =
+      (timeLeft / GAME_CONFIG.ANSWER_TIME) * 100 + "%";
 
-    if (timeLeft <= 0) {
-      handleWrong();
-    }
+    if (timeLeft <= 0) handleWrong();
   }, 1000);
 }
 
@@ -207,14 +164,12 @@ function stopTimer() {
 }
 
 /* ============================================================
-   10) PLAYER ANSWER (CALLED FROM input.js)
+   10) INPUT CALLBACK (DARI input.js)
 ============================================================ */
 window.playerAnswer = function (ans) {
   if (gameState !== STATE.ANSWERING) return;
-
-  debug("Player answer:", ans);
-
-  ans === currentAnswer ? handleCorrect() : handleWrong();
+  log("Answer:", ans);
+  ans === correctAnswer ? handleCorrect() : handleWrong();
 };
 
 /* ============================================================
@@ -224,35 +179,30 @@ function handleCorrect() {
   stopTimer();
   playSound(SOUND.CORRECT);
 
-  const gained = Math.max(
+  const gain = Math.max(
     1,
     Math.ceil((timeLeft / GAME_CONFIG.ANSWER_TIME) * 20)
   );
 
-  score += gained;
-  roundCount++;
+  score += gain;
+  round++;
 
-  setText("score", score);
+  txt("scoreText", score);
+  txt("roundText", `${round} / ${GAME_CONFIG.TOTAL_ROUNDS}`);
+
   setState(STATE.PAUSE);
 
-  debug("Correct | Score +", gained);
-
   setTimeout(() => {
-    if (roundCount >= GAME_CONFIG.TOTAL_ROUNDS) {
-      handleWin();
-    } else {
-      nextRound();
-    }
+    round >= GAME_CONFIG.TOTAL_ROUNDS ? winGame() : nextRound();
   }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
 }
 
 /* ============================================================
-   12) SALAH / MASA HABIS
+   12) SALAH / TIMEOUT
 ============================================================ */
 function handleWrong() {
   stopTimer();
   playSound(SOUND.WRONG);
-  debug("Wrong / Time up");
   endGame(false);
 }
 
@@ -266,43 +216,37 @@ function nextRound() {
 }
 
 /* ============================================================
-   14) WIN
+   14) WIN / END
 ============================================================ */
-function handleWin() {
+function winGame() {
   playSound(SOUND.WIN);
-  debug("GAME WIN");
   endGame(true);
 }
 
-/* ============================================================
-   15) END GAME
-============================================================ */
-function endGame(win) {
+function endGame() {
   stopCamera();
   stopTimer();
   setState(STATE.END);
-
-  el("finalScore").textContent = score;
-  el("endModal").style.display = "block";
+  alert("Permainan Tamat! Markah: " + score);
 }
 
 /* ============================================================
-   16) START GAME
+   15) START GAME
 ============================================================ */
 function startGame() {
-  debug("Game start");
-
-  roundCount = 0;
+  log("START GAME");
+  round = 0;
   score = 0;
-  setText("score", 0);
-
+  txt("scoreText", 0);
+  txt("roundText", `0 / ${GAME_CONFIG.TOTAL_ROUNDS}`);
   el("questionBox").style.display = "none";
-  el("endModal").style.display = "none";
-
   setState(STATE.SCANNING);
   startCamera();
 }
 
+/* ============================================================
+   16) INIT
+============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-  el("startScanBtn").addEventListener("click", startGame);
+  el("startBtn")?.addEventListener("click", startGame);
 });

@@ -50,6 +50,21 @@ const QUESTION_BANK = {
   Kuarzit: [
     { q: "Kuarzit berasal dari batu pasir?", a: true },
     { q: "Kuarzit ialah batuan igneus?", a: false }
+  ],
+   
+  Pegmatit: [
+    { q: "Pegmatit ialah batuan igneus.", a: true },
+    { q: "Pegmatit terbentuk daripada pemendapan sedimen.", a: false }
+  ],
+   
+  BatuKapur: [
+    { q: "Batu kapur ialah batuan sedimen.", a: true },
+    { q: "Batu kapur terbentuk daripada lava gunung berapi.", a: false }
+  ],
+   
+  Gneiss: [
+    { q: "Gneiss ialah batuan metamorf.", a: true },
+    { q: "Gneiss terbentuk daripada batuan sedimen tanpa tekanan.", a: false }
   ]
 
   // 🔒 Simpan untuk masa depan

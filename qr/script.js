@@ -154,6 +154,7 @@ const STATE = {
 let currentState = STATE.IDLE;
 let currentRound = 0;
 let scoreQR = 0;
+let usedQR = new Set(); 
 
 let currentAnswer = null;
 let timer = null;
@@ -184,7 +185,9 @@ async function startGame() {
   debugLog("Game started");
   scoreQR = 0;
   currentRound = 0;
+  usedQR.clear();
   updateUI();
+   
 
   document.body.className = "scanning game-started";
   currentState = STATE.SCANNING;
@@ -240,8 +243,17 @@ function handleQR(payload) {
     scanLoop();
     return;
   }
+  // QR dah pernah digunakan
+  if (usedQR.has(payload)) {
+    debugLog("QR ignored (already used):", payload);
+    scanLoop();
+    return;
+  }
 
-  debugLog("Valid QR:", payload);
+  // Tandakan QR ini telah digunakan
+  usedQR.add(payload);
+
+  debugLog("QR accepted:", payload);
   askQuestion(payload);
 }
 
@@ -351,6 +363,7 @@ function pauseNext() {
 ========================= */
 function endGame(win) {
   currentState = STATE.END;
+   usedQR.clear(); // optional safety
    if (video.srcObject) {
   video.srcObject.getTracks().forEach(t => t.stop());
   video.srcObject = null;

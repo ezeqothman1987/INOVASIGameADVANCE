@@ -47,7 +47,7 @@ const finalScoreP2 = document.getElementById("finalScoreP2");
 /* =========================
    AUDIO
 ========================= */
-//const AUDIO_PATH = "../static/sound/";
+const AUDIO_PATH = "../static/sound/";
 
 //const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
 //const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);

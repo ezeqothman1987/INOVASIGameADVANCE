@@ -1,51 +1,80 @@
 /* ============================================================
-   gameData.js
-   ============================================================ */
-
-/* =================================================================
-  DATA ROUND PERMAINAN (SOALAN KAT SINI, tambah kalau nak tambah round)
- format: 
- { image: "static/image/gambar+soalan", correct: "letak jawapan betul A/B" },
-  =========================*/
-export const ROUNDS = [
-  { image: "static/image/gambar1.png", correct: "B" },
-  { image: "static/image/gambar2.png", correct: "A" },
-  { image: "static/image/gambar3.png", correct: "A" },
-  { image: "static/image/gambar4.png", correct: "B" },
-  { image: "static/image/gambar5.png", correct: "B" },
-  { image: "static/image/gambar6.png", correct: "A" },
-   { image: "static/image/gambar7.png", correct: "A" },
-   { image: "static/image/gambar8.png", correct: "B" },
-   { image: "static/image/gambar9.png", correct: "A" }
-];
-
-// =========================
-// KONFIGURASI AUTO
-// =========================
-export const TOTAL_ROUNDS = 5; //berapa round?
-export const ROUND_TIME  = 10; //masa per round
-export const SPEED_BONUS = 5;
-
-// =========================
-// UTILITI
-// =========================
-export function getRoundData(roundNumber) {
-  return ROUNDS[roundNumber - 1] || null;
-}
-
-/* ============================================================
-   NOTA PENTING
+   gameData.js — GEOQUIZ (GAME 2)
    ------------------------------------------------------------
-   1. Nak tukar gambar?
-      → Tukar path image sahaja
-
-   2. Nak tukar jawapan betul?
-      → Tukar "correct": "A" atau "B"
-
-   3. Nak tambah round (contoh 10)?
-      → Tambah objek baru dalam array ROUNDS
-
-   4. script.js, html dan lain2 JANGAN DIUSIK!
-
-   5. cari Ezeq kalau nak ubah apa-apa (Tanya dulu sebelum buat)
+   ❗ EDIT FAIL INI SAHAJA UNTUK UBAH GAME
+   ❌ JANGAN TAMBAH LOGIK / TIMER / EVENT
+   ✔ DIGUNAKAN OLEH script.js(game2)
 ============================================================ */
+
+/* =========================
+   GAME CONFIG
+========================= */
+const GAME_CONFIG = {
+  TOTAL_ROUNDS: 5,          // Bilangan pusingan / QR
+  ANSWER_TIME: 20,          // Masa jawab (saat)
+  PAUSE_AFTER_CORRECT: 3,   // Pause lepas betul (saat)
+
+  SCORE: {
+    MAX: 10,
+    MIN: 1
+  }
+};
+
+/* =========================
+   UI TEXT
+========================= */
+const UI_TEXT = {
+  IDLE: "TEKAN MULA BERMAIN",
+  SCANNING: "SCANNING...",
+  ANSWER: "SILA MENJAWAB",
+  CONGRATS: "TAHNIAH!",
+  GAME_OVER: "PERMAINAN TAMAT"
+};
+
+/* =========================
+   QUESTION BANK (GAME 1)
+   - QR payload → set soalan
+   - Boleh tambah batu / topik
+========================= */
+const QUESTION_BANK = {
+  Granit: [
+    { q: "Granit ialah batuan igneus?", a: true },
+    { q: "Granit terbentuk di permukaan bumi?", a: false }
+  ],
+
+  Syis: [
+    { q: "Syis ialah batuan metamorf?", a: true },
+    { q: "Syis terbentuk dari lava?", a: false }
+  ],
+
+  Kuarzit: [
+    { q: "Kuarzit berasal dari batu pasir?", a: true },
+    { q: "Kuarzit ialah batuan igneus?", a: false }
+  ],
+   
+  Pegmatit: [
+    { q: "Pegmatit ialah batuan igneus.", a: true },
+    { q: "Pegmatit terbentuk daripada pemendapan sedimen.", a: false }
+  ],
+   
+  BatuKapur: [
+    { q: "Batu kapur ialah batuan sedimen.", a: true },
+    { q: "Batu kapur terbentuk daripada lava gunung berapi.", a: false }
+  ],
+   
+  Gneiss: [
+    { q: "Gneiss ialah batuan metamorf.", a: true },
+    { q: "Gneiss terbentuk daripada batuan sedimen tanpa tekanan.", a: false }
+  ]
+
+  // 🔒 Simpan untuk masa depan
+  // Basalt: [],
+  // Gneiss: [],
+  // Marble: []
+};
+
+/* =========================
+   VALID QR LIST
+   (DIGUNAKAN OLEH script.js)
+========================= */
+const VALID_QR = Object.keys(QUESTION_BANK);

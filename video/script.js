@@ -1,7 +1,5 @@
 /* ============================================================
    script.js — GEOQUIZ BATTLE MODE (2 PLAYER)
-   - Based on QR GeoQuiz
-   - Flow: Scan → Question → P1 & P2 Answer → Score → Next
 ============================================================ */
 
 /* =========================
@@ -45,8 +43,8 @@ const backHomeBtn = document.querySelector(".back-home-btn");
 const AUDIO_PATH = "../static/sound/";
 const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
 const soundWrong = new Audio(`${AUDIO_PATH}boo.mp3`);
-const audioClap = new Audio(`${AUDIO_PATH}clap.mp3`);
 const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
+const audioClap = new Audio(`${AUDIO_PATH}clap.mp3`);
 
 function playSound(a) {
   try {
@@ -54,16 +52,72 @@ function playSound(a) {
     a.play().catch(() => {});
   } catch {}
 }
-
 /* =========================
-   GAME STATE
+   HALL OF FAME (BATTLE)
+========================= */
+const HOF_BATTLE_KEY = "geoquiz_battle_hof";
+const HOF_BATTLE_MAX = 5;
+
+function loadBattleHOF() {
+  try {
+    return JSON.parse(localStorage.getItem(HOF_BATTLE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveBattleHOF(list) {
+  localStorage.setItem(HOF_BATTLE_KEY, JSON.stringify(list));
+}
+
+function renderBattleHOF() {
+  const ul = document.getElementById("hofList"); // ikut HTML awak
+  if (!ul) return;
+
+  const hof = loadBattleHOF();
+  ul.innerHTML = "";
+
+  hof.forEach((r, i) => {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+    li.innerHTML = `
+      <strong>${i + 1}. ${r.p1} vs ${r.p2}</strong><br>
+      <span>${r.s1} - ${r.s2}</span>
+      <small>${r.date}</small>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+function addBattleHOF(p1, p2, s1, s2) {
+  const hof = loadBattleHOF();
+
+  hof.push({
+    p1, p2,
+    s1, s2,
+    date: new Date().toLocaleDateString("ms-MY")
+  });
+
+  hof.sort((a, b) => (b.s1 + b.s2) - (a.s1 + a.s2));
+  saveBattleHOF(hof.slice(0, HOF_BATTLE_MAX));
+  renderBattleHOF();
+}
+//reset HOF
+function clearBattleHOF() {
+  if (!confirm("Padam semua rekod Battle Mode?")) return;
+
+  localStorage.removeItem(HOF_BATTLE_KEY);
+  renderBattleHOF();
+}
+/* =========================
+   STATE
 ========================= */
 const STATE = {
   IDLE: "idle",
   SCANNING: "scanning",
   ANSWERING: "answering",
-  PAUSE: "pause",
   QR_BLOCKED: "qr_blocked",
+  PAUSE: "pause",
   END: "end"
 };
 
@@ -75,27 +129,28 @@ let timeLeft = 0;
 let currentAnswer = null;
 
 /* =========================
-   PLAYER STATE (BATTLE)
+   PLAYER (BATTLE)
 ========================= */
 let scoreP1 = 0;
 let scoreP2 = 0;
 
 let players = {
-  1: { answered: false, correct: false, time: 0 },
-  2: { answered: false, correct: false, time: 0 }
+  1: { answered: false, answer: null, correct: false, time: 0 },
+  2: { answered: false, answer: null, correct: false, time: 0 }
 };
 
 function resetPlayerAnswers() {
-  players[1] = { answered: false, correct: false, time: 0 };
-  players[2] = { answered: false, correct: false, time: 0 };
+  players[1] = { answered: false, answer: null, correct: false, time: 0 };
+  players[2] = { answered: false, answer: null, correct: false, time: 0 };
 }
 
-/* =========================
-   BUTTON LOCK
-========================= */
-function updateStartButtonLock() {
-  startBtn.disabled =
-    currentState === STATE.ANSWERING || currentState === STATE.PAUSE;
+function updateAnswerStatus() {
+  if (players[1].answered && !players[2].answered)
+    cameraStatus.textContent = "Menunggu jawapan Pemain 2...";
+  else if (!players[1].answered && players[2].answered)
+    cameraStatus.textContent = "Menunggu jawapan Pemain 1...";
+  else
+    cameraStatus.textContent = "Menunggu kedua-dua pemain...";
 }
 
 /* =========================
@@ -103,6 +158,7 @@ function updateStartButtonLock() {
 ========================= */
 function init() {
   updateUI();
+  renderBattleHOF();
 
   startBtn.addEventListener("click", handleStartButton);
 
@@ -115,11 +171,14 @@ function init() {
           : btn.dataset.answer === "false"
           ? false
           : null;
-
       playerAnswer(p, ans);
     });
   });
-
+   const clearBtn = document.getElementById("clearHOFBtn");
+   if (clearBtn) {
+     clearBtn.addEventListener("click", clearBattleHOF);
+   }
+   
   fullscreenBtn?.addEventListener("click", toggleFullscreen);
   backHomeBtn?.addEventListener("click", goBackHome);
 
@@ -127,22 +186,7 @@ function init() {
     if (document.hidden) stopCameraAndScan();
   });
 }
-
 document.addEventListener("DOMContentLoaded", init);
-
-/* =========================
-   START / STOP
-========================= */
-function handleStartButton() {
-  if (currentState === STATE.IDLE || currentState === STATE.END) {
-    startGame();
-    return;
-  }
-
-  if (confirm("Hentikan permainan?")) {
-    resetGame();
-  }
-}
 
 /* =========================
    UI
@@ -159,6 +203,14 @@ function updateUI() {
 /* =========================
    GAME FLOW
 ========================= */
+async function handleStartButton() {
+  if (currentState === STATE.IDLE || currentState === STATE.END) {
+    startGame();
+  } else if (confirm("Hentikan permainan?")) {
+    resetGame();
+  }
+}
+
 async function startGame() {
   scoreP1 = 0;
   scoreP2 = 0;
@@ -167,8 +219,6 @@ async function startGame() {
 
   currentState = STATE.SCANNING;
   updateUI();
-  updateStartButtonLock();
-
   cameraStatus.textContent = UI_TEXT.SCANNING;
 
   await startCamera();
@@ -192,7 +242,6 @@ async function startCamera() {
 }
 
 function stopCameraAndScan() {
-  currentState = STATE.IDLE;
   if (video?.srcObject) {
     video.srcObject.getTracks().forEach(t => t.stop());
     video.srcObject = null;
@@ -201,7 +250,7 @@ function stopCameraAndScan() {
 }
 
 /* =========================
-   SCAN LOOP
+   QR SCAN
 ========================= */
 function scanLoop(ts) {
   if (currentState !== STATE.SCANNING) return;
@@ -220,40 +269,25 @@ function scanLoop(ts) {
     handleQR(qr.data.trim());
     return;
   }
-
   requestAnimationFrame(scanLoop);
 }
 
-/* =========================
-   QR HANDLER
-========================= */
 function handleQR(payload) {
-  if (!VALID_QR.includes(payload)) {
-    scanLoop();
-    return;
-  }
+  if (!VALID_QR.includes(payload)) return scanLoop();
 
   if (usedQR.has(payload)) {
-    showQRBlockedMessage();
-    return;
+    currentState = STATE.QR_BLOCKED;
+    playSound(soundBlocked);
+    cameraStatus.textContent = "QR telah digunakan";
+    return setTimeout(() => {
+      currentState = STATE.SCANNING;
+      cameraStatus.textContent = UI_TEXT.SCANNING;
+      scanLoop();
+    }, 1200);
   }
 
   usedQR.add(payload);
   askQuestion(payload);
-}
-
-function showQRBlockedMessage() {
-  currentState = STATE.QR_BLOCKED;
-  cameraStatus.textContent = "QR telah digunakan";
-  playSound(soundBlocked);
-
-  setTimeout(() => {
-    if (currentState === STATE.QR_BLOCKED) {
-      currentState = STATE.SCANNING;
-      cameraStatus.textContent = UI_TEXT.SCANNING;
-      scanLoop();
-    }
-  }, 1200);
 }
 
 /* =========================
@@ -261,7 +295,6 @@ function showQRBlockedMessage() {
 ========================= */
 function askQuestion(topic) {
   currentState = STATE.ANSWERING;
-  updateStartButtonLock();
   resetPlayerAnswers();
 
   const set = QUESTION_BANK[topic];
@@ -297,30 +330,32 @@ function startTimer() {
 }
 
 /* =========================
-   PLAYER ANSWER
+   ANSWER
 ========================= */
-function playerAnswer(playerId, answer) {
+window.playerAnswer = function (id, ans) {
   if (currentState !== STATE.ANSWERING) return;
-  if (players[playerId].answered) return;
+  if (players[id].answered) return;
 
-  players[playerId].answered = true;
-  players[playerId].correct = answer === currentAnswer;
-  players[playerId].time = timeLeft;
+  players[id].answered = true;
+  players[id].answer = ans;
+  players[id].time = timeLeft;
 
-  updateWaitingStatus();
+  updateAnswerStatus();
 
   if (players[1].answered && players[2].answered) {
     clearInterval(timer);
-    scoreBattleRound();
-    pauseNext();
+    evaluateRound();
   }
-}
+};
 
-function updateWaitingStatus() {
-  if (!players[1].answered)
-    cameraStatus.textContent = "Menunggu Pemain 1...";
-  else if (!players[2].answered)
-    cameraStatus.textContent = "Menunggu Pemain 2...";
+function evaluateRound() {
+  [1, 2].forEach(id => {
+    players[id].correct = players[id].answer === currentAnswer;
+    playSound(players[id].correct ? soundCorrect : soundWrong);
+  });
+
+  scoreBattleRound();
+  pauseNext();
 }
 
 /* =========================
@@ -328,16 +363,12 @@ function updateWaitingStatus() {
 ========================= */
 function scoreBattleRound() {
   [1, 2].forEach(id => {
-    const p = players[id];
-    if (!p.correct) return;
-
+    if (!players[id].correct) return;
     const earned = Math.max(
       GAME_CONFIG.SCORE.MIN,
-      Math.min(GAME_CONFIG.SCORE.MAX, p.time)
+      Math.min(GAME_CONFIG.SCORE.MAX, players[id].time)
     );
-
     id === 1 ? (scoreP1 += earned) : (scoreP2 += earned);
-    playSound(soundCorrect);
   });
 
   currentRound++;
@@ -345,14 +376,14 @@ function scoreBattleRound() {
 }
 
 /* =========================
-   PAUSE / NEXT
+   NEXT / END
 ========================= */
 function pauseNext() {
   currentState = STATE.PAUSE;
-  updateStartButtonLock();
 
   setTimeout(() => {
     questionBox.style.display = "none";
+    resetPlayerAnswers();
 
     if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
       endGame();
@@ -364,24 +395,18 @@ function pauseNext() {
   }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
 }
 
-/* =========================
-   END
-========================= */
 function endGame() {
   currentState = STATE.END;
-  updateStartButtonLock();
-
   stopCameraAndScan();
   playSound(audioClap);
   cameraStatus.textContent = UI_TEXT.CONGRATS;
 }
 
 /* =========================
-   RESET
+   RESET / UTIL
 ========================= */
 function resetGame() {
   if (timer) clearInterval(timer);
-
   stopCameraAndScan();
 
   currentState = STATE.IDLE;
@@ -393,13 +418,9 @@ function resetGame() {
 
   questionBox.style.display = "none";
   cameraStatus.textContent = UI_TEXT.IDLE;
-
   updateUI();
 }
 
-/* =========================
-   UTIL
-========================= */
 function toggleFullscreen() {
   if (!document.fullscreenElement)
     document.documentElement.requestFullscreen().catch(() => {});
@@ -408,5 +429,6 @@ function toggleFullscreen() {
 
 function goBackHome() {
   if (currentState !== STATE.IDLE && !confirm("Keluar ke menu utama?")) return;
+  stopCameraAndScan();
   window.location.href = "../index.html";
 }

@@ -160,31 +160,6 @@ let timer = null;
 let timeLeft = 0;
 
 /* =========================
-   QUESTION BANK (AKTIF 3 SAHAJA)
-========================= */
-const QUESTION_BANK = {
-  Granit: [
-    { q: "Granit ialah batuan igneus?", a: true },
-    { q: "Granit terbentuk di permukaan bumi?", a: false }
-  ],
-  Syis: [
-    { q: "Syis ialah batuan metamorf?", a: true },
-    { q: "Syis terbentuk dari lava?", a: false }
-  ],
-  Kuarzit: [
-    { q: "Kuarzit berasal dari batu pasir?", a: true },
-    { q: "Kuarzit ialah batuan igneus?", a: false }
-  ],
-
-  // Batu lain (DISIMPAN)
-  // Basalt: [],
-  // Gneiss: [],
-  // Marble: []
-};
-
-const VALID_QR = Object.keys(QUESTION_BANK);
-
-/* =========================
    INIT
 ========================= */
 function init() {

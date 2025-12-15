@@ -20,19 +20,19 @@ const canvas = document.getElementById("qr-canvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const cameraStatus = document.getElementById("cameraStatus");
 
-const timerText = document.getElementById("timer");
-const roundText = document.getElementById("round");
+const startGameBtn = document.getElementById("startGameBtn");
+const stopGameBtn  = document.getElementById("stopGameBtn");
 
-const scoreP1Text = document.getElementById("scoreP1");
-const scoreP2Text = document.getElementById("scoreP2");
-const statusText = document.getElementById("statusText");
+const statusText   = document.getElementById("statusText");
+const timerText    = document.getElementById("timer");
+const roundText    = document.getElementById("round");
 
-const startBtn = document.getElementById("startGameBtn");
-const stopBtn  = document.getElementById("stopGameBtn");
+const scoreP1Text  = document.getElementById("scoreP1");
+const scoreP2Text  = document.getElementById("scoreP2");
 
-const questionBox = document.getElementById("questionBox");
-const questionText = document.getElementById("questionText");
-
+const endModal     = document.getElementById("endModal");
+const finalScoreP1 = document.getElementById("finalScoreP1");
+const finalScoreP2 = document.getElementById("finalScoreP2");
 /* =========================
    GAME STATE
 ========================= */

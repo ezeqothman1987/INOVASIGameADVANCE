@@ -158,6 +158,15 @@ body.scanning .scanner-overlay {
   to   { top: 100%; }
 }
 
+.hidden-video,
+.hidden-canvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ============================================================
    7) INFO PANEL (DIBESARKAN UNTUK TV)
 ============================================================ */

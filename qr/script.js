@@ -45,7 +45,101 @@ function playSound(audio) {
     audio.play().catch(() => {});
   } catch(e) {}
 }
+/* ============================================================
+   HALL OF FAME — GEOQUIZ QR (GAME 1)
+   - Simpan ke localStorage
+   - Top 5 sahaja
+   - Asing dari game lain
+============================================================ */
+//CONFIG
+const HOF_KEY = "geoquiz_hall_of_fame"; // KHUSUS GAME 1
+const HOF_MAX = 5;
 
+//LOAD
+function loadHallOfFame() {
+  try {
+    return JSON.parse(localStorage.getItem(HOF_KEY)) || [];
+  } catch (e) {
+    console.warn("HOF load error", e);
+    return [];
+  }
+}
+
+//SAVE
+function saveHallOfFame(list) {
+  localStorage.setItem(HOF_KEY, JSON.stringify(list));
+}
+
+//   ADD RECORD
+function addToHallOfFame(playerName, score) {
+  score = Number(score);
+
+  debugLog("HOF ADD:", playerName, score);
+
+  if (isNaN(score)) {
+    console.warn("HOF: score tidak sah, batal simpan");
+    return;
+  }
+
+  const hof = loadHallOfFame();
+
+  hof.push({
+    name: playerName?.trim() || "Tanpa Nama",
+    score: score,
+    date: new Date().toLocaleDateString("ms-MY")
+  });
+
+  // Susun markah tertinggi di atas
+  hof.sort((a, b) => b.score - a.score);
+
+  // Simpan top 5 sahaja
+  saveHallOfFame(hof.slice(0, HOF_MAX));
+
+  renderHallOfFame();
+}
+
+//RENDER UI
+function renderHallOfFame() {
+  const ul = document.getElementById("hofQR");
+  if (!ul) {
+    console.warn("HOF: elemen #hofQR tidak ditemui");
+    return;
+  }
+
+  console.log("Render HOF");
+
+  const hof = loadHallOfFame();
+  ul.innerHTML = "";
+
+  if (hof.length === 0) {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+    li.style.opacity = "0.6";
+    li.textContent = "Belum ada rekod";
+    ul.appendChild(li);
+    return;
+  }
+
+  hof.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = "hof-item";
+
+    li.innerHTML = `
+      <strong>${index + 1}. ${item.name}</strong><br>
+      <span>${item.score} markah</span>
+      <small style="opacity:.6"> (${item.date})</small>
+    `;
+
+    ul.appendChild(li);
+  });
+}
+
+//   CLEAR RECORD (RESET)
+function clearHallOfFameQR() {
+  if (!confirm("Padam semua rekod GeoQuiz?")) return;
+  localStorage.removeItem(HOF_KEY);
+  renderHallOfFame();
+}
 /* =========================
    GAME STATE
 ========================= */
@@ -59,7 +153,7 @@ const STATE = {
 
 let currentState = STATE.IDLE;
 let currentRound = 0;
-let score = 0;
+let scoreQR = 0;
 
 let currentAnswer = null;
 let timer = null;
@@ -105,7 +199,7 @@ document.addEventListener("DOMContentLoaded", init);
 ========================= */
 function updateUI() {
   roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
-  scoreText.textContent = score;
+  scoreText.textContent = scoreQR;
 }
 
 /* =========================
@@ -113,7 +207,7 @@ function updateUI() {
 ========================= */
 async function startGame() {
   debugLog("Game started");
-  score = 0;
+  scoreQR = 0;
   currentRound = 0;
   updateUI();
 
@@ -237,7 +331,7 @@ function handleCorrect() {
     Math.min(GAME_CONFIG.SCORE.MAX, timeLeft)
   );
 
-  score += earned;
+  scoreQR += earned;
   currentRound++;
   updateUI();
 
@@ -282,85 +376,21 @@ function pauseNext() {
 ========================= */
 function endGame(win) {
   currentState = STATE.END;
+   if (video.srcObject) {
+  video.srcObject.getTracks().forEach(t => t.stop());
+  video.srcObject = null;
+}
 
   if (win) {
     playSound(audioClap);
     cameraStatus.textContent = UI_TEXT.CONGRATS;
      setTimeout(() => {
     const name = prompt("Masukkan nama untuk Hall of Fame:");
-    addToHallOfFame(name, score);
+    addToHallOfFame(name, scoreQR);
   }, 300);
   } else {
     cameraStatus.textContent = UI_TEXT.GAME_OVER;
   }
 
   document.body.className = "idle";
-}
-/* =========================
-   HALL OF FAME CONFIG
-========================= */
-const HOF_KEY = "geoquiz_hall_of_fame";
-const HOF_MAX = 5;
-
-function loadHallOfFame() {
-  try {
-    return JSON.parse(localStorage.getItem(HOF_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveHallOfFame(list) {
-  localStorage.setItem(HOF_KEY, JSON.stringify(list));
-}
-
-function addToHallOfFame(playerName, score) {
-  console.log("HOF ADD:", playerName, score);
-
-  if (score === undefined || score === null) {
-    console.warn("HOF: score undefined, batal simpan");
-    return;
-  }
-
-  const hof = loadHallOfFame();
-
-  hof.push({
-    name: playerName || "Tanpa Nama",
-    score: score,
-    date: new Date().toLocaleDateString("ms-MY")
-  });
-
-  hof.sort((a, b) => b.score - a.score);
-  saveHallOfFame(hof.slice(0, HOF_MAX));
-
-  renderHallOfFame();
-}
-function renderHallOfFame() {
-  const ul = document.getElementById("hofQR");
-  if (!ul) return;
-   console.log("Render HOF");
-
-  const hof = loadHallOfFame();
-  ul.innerHTML = "";
-
-  if (hof.length === 0) {
-    const li = document.createElement("li");
-    li.style.opacity = "0.6";
-    li.textContent = "Belum ada rekod";
-    ul.appendChild(li);
-    return;
-  }
-
-  hof.forEach((item, index) => {
-    const li = document.createElement("li");
-    li.className = "hof-item";
-
-    li.innerHTML = `
-      <strong>${index + 1}. ${item.name}</strong><br>
-      <span>${item.score} markah</span>
-      <small style="opacity:.6"> (${item.date})</small>
-    `;
-
-    ul.appendChild(li);
-  });
 }

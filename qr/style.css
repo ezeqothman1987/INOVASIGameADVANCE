@@ -80,6 +80,13 @@ body {
   box-shadow: 0 6px 18px rgba(255,160,0,0.5);
 }
 
+button:disabled,
+.btn-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(60%);
+}
+
 /* ============================================================
    5) CAMERA BOX (SCANNER) – FIXED & STABLE
 ============================================================ */

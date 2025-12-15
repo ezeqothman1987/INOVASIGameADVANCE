@@ -1,4 +1,3 @@
-
 /* ============================================================
    script.js — GEOQUIZ 2P WIP
    - Depends on: gameData.js, input.js, jsQR.js
@@ -48,20 +47,20 @@ const finalScoreP2 = document.getElementById("finalScoreP2");
 /* =========================
    AUDIO
 ========================= */
-const AUDIO_PATH = "../static/sound/";
+//const AUDIO_PATH = "../static/sound/";
 
-const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
-const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
-const audioClap    = new Audio(`${AUDIO_PATH}clap.mp3`);
-const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
+//const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
+//const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
+//const audioClap    = new Audio(`${AUDIO_PATH}clap.mp3`);
+//const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
 
-function playSound(audio) {
-  if (!audio) return;
-  try {
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  } catch(e) {}
-}
+//function playSound(audio) {
+//  if (!audio) return;
+//  try {
+//    audio.currentTime = 0;
+//    audio.play().catch(() => {});
+//  } catch(e) {}
+//}
 /* ============================================================
    HALL OF FAME — GEOQUIZ QR (2 PLAYER / BATTLE)
    - Simpan ke localStorage (KEY BARU)
@@ -226,14 +225,8 @@ function updateStartButtonLock() {
 function init() {
   debugLog("Init game");
   updateUI();
-  renderHallOfFame();
 
   startBtn.addEventListener("click", handleStartButton);
-
-  const clearBtn = document.getElementById("clearHOFBtn");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", clearHallOfFameQR);
-  }
 
   if (fullscreenBtn) {
     fullscreenBtn.addEventListener("click", toggleFullscreen);
@@ -443,9 +436,14 @@ function startTimer() {
     timeBarFill.style.width = `${(timeLeft / GAME_CONFIG.ANSWER_TIME) * 100}%`;
 
     if (timeLeft <= 0) {
-      clearInterval(timer);
-      handleWrong();
-    }
+    clearInterval(timer);
+    timer = null;
+
+    answeredP1 = true;
+    answeredP2 = true;
+
+    handleRoundEnd();
+  }
   }, 1000);
 }
 
@@ -542,11 +540,10 @@ function endGame() {
 
     if (nameP1 || nameP2) {
       addToHallOfFameBattle(
-        nameP1 || "Pemain 1",
-        scoreP1,
-        nameP2 || "Pemain 2",
-        scoreP2
-      );
+  (nameP1 || "Pemain 1") + " vs " + (nameP2 || "Pemain 2"),
+  scoreP1,
+  scoreP2
+);
     }
   }, 300);
 }

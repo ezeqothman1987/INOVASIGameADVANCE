@@ -28,6 +28,20 @@ const timeText = document.getElementById("timeText");
 const questionBox = document.getElementById("questionBox");
 const questionText = document.getElementById("questionText");
 
+//debug
+function updateUI() {
+  if (roundText) {
+    roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
+  }
+
+  if (startBtn) {
+    startBtn.textContent =
+      currentState === STATE.IDLE || currentState === STATE.END
+        ? "MULA BATTLE"
+        : "HENTIKAN";
+  }
+}
+
 /* =========================
    GAME STATE
 ========================= */

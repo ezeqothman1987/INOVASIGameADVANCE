@@ -137,8 +137,11 @@ function renderHallOfFame() {
 //   CLEAR RECORD (RESET)
 function clearHallOfFameQR() {
   if (!confirm("Padam semua rekod GeoQuiz?")) return;
+
   localStorage.removeItem(HOF_KEY);
   renderHallOfFame();
+
+  debugLog("HOF cleared");
 }
 /* =========================
    GAME STATE
@@ -179,13 +182,15 @@ function updateStartButtonLock() {
 function init() {
   debugLog("Init game");
   updateUI();
+  renderHallOfFame();
 
-  // x terus startGame
   startBtn.addEventListener("click", handleStartButton);
 
-  renderHallOfFame(); // optional tapi disyorkan
+  const clearBtn = document.getElementById("clearHOFBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", clearHallOfFameQR);
+  }
 }
-
 document.addEventListener("DOMContentLoaded", init);
 
 /* =========================

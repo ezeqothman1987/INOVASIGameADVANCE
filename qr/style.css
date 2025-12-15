@@ -388,3 +388,54 @@ body.game-started .sidebar {
   background-size: 6px 6px;
   pointer-events: none;
 }
+/* ============================================================
+   ANSWER FEEDBACK (QUESTION BOX)
+============================================================ */
+
+/* BETUL */
+.question-correct {
+  animation: correctPulse 0.6s ease;
+  border-color: #38b000 !important;
+  box-shadow: 0 0 25px rgba(56,176,0,0.8);
+}
+
+/* SALAH */
+.question-wrong {
+  animation: wrongShake 0.4s ease;
+  border-color: #d00000 !important;
+  box-shadow: 0 0 25px rgba(208,0,0,0.8);
+}
+
+@keyframes correctPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wrongShake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-8px); }
+  50%  { transform: translateX(8px); }
+  75%  { transform: translateX(-6px); }
+  100% { transform: translateX(0); }
+}
+/* ============================================================
+   TIME BAR
+============================================================ */
+
+.time-bar {
+  width: 100%;
+  height: 10px;
+  margin-top: 14px;
+
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#timeBarFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #90dbf4, #ffb703);
+  transition: width 0.9s linear;
+}

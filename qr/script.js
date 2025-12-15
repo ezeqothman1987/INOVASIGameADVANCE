@@ -78,7 +78,7 @@ let correctAnswer = null;
 ============================================================ */
 const video = el("video");
 const canvas = el("qr-canvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 let scanning = false;
 
 async function startCamera() {

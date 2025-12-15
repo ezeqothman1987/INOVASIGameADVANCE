@@ -18,29 +18,20 @@ function debugLog(...args) {
 const video = document.getElementById("video");
 const canvas = document.getElementById("qr-canvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-const startBtn = document.getElementById("startBtn");
 const cameraStatus = document.getElementById("cameraStatus");
 
-const roundText = document.getElementById("roundText");
-const timeText = document.getElementById("timeText");
+const timerText = document.getElementById("timer");
+const roundText = document.getElementById("round");
+
+const scoreP1Text = document.getElementById("scoreP1");
+const scoreP2Text = document.getElementById("scoreP2");
+const statusText = document.getElementById("statusText");
+
+const startBtn = document.getElementById("startGameBtn");
+const stopBtn  = document.getElementById("stopGameBtn");
 
 const questionBox = document.getElementById("questionBox");
 const questionText = document.getElementById("questionText");
-
-//debug
-function updateUI() {
-  if (roundText) {
-    roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
-  }
-
-  if (startBtn) {
-    startBtn.textContent =
-      currentState === STATE.IDLE || currentState === STATE.END
-        ? "MULA BATTLE"
-        : "HENTIKAN";
-  }
-}
 
 /* =========================
    GAME STATE
@@ -74,12 +65,22 @@ const players = {
 function initBattle() {
   debugLog("Init Battle Mode");
 
-  updateUI();
-  startBtn.addEventListener("click", handleStartButton);
+function updateUI() {
+  if (roundText) {
+    roundText.textContent = currentRound;
+  }
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopCamera();
-  });
+  if (timerText) {
+    timerText.textContent = timeLeft ?? GAME_CONFIG.ANSWER_TIME;
+  }
+
+  if (scoreP1Text) {
+    scoreP1Text.textContent = scoreP1;
+  }
+
+  if (scoreP2Text) {
+    scoreP2Text.textContent = scoreP2;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initBattle);

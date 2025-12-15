@@ -158,15 +158,6 @@ body.scanning .scanner-overlay {
   to   { top: 100%; }
 }
 
-.hidden-video,
-.hidden-canvas {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* ============================================================
    7) INFO PANEL (DIBESARKAN UNTUK TV)
 ============================================================ */
@@ -479,3 +470,31 @@ body.game-started .sidebar {
 .hof-reset-btn:hover {
   background: #7a2a2a;
 }
+/* =========================
+   BATTLE BUTTONS
+========================= */
+.button-panel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.cat-btn {
+  font-size: 0.9rem;
+  padding: 10px;
+}
+
+.cat-btn.p2 {
+  border: 2px dashed #ff9800;
+}
+
+/* =========================
+   HALL OF FAME BATTLE
+========================= */
+#hofVideo li {
+  padding: 6px;
+  border-bottom: 1px dashed rgba(255,255,255,0.3);
+  font-size: 0.85rem;
+}
+
+

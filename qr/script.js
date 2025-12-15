@@ -46,6 +46,7 @@ const AUDIO_PATH = "../static/sound/";
 const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
 const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
 const audioClap    = new Audio(`${AUDIO_PATH}clap.mp3`);
+const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
 
 function playSound(audio) {
   if (!audio) return;
@@ -361,6 +362,7 @@ function showQRBlockedMessage() {
   cameraStatus.textContent = "QR ini sudah digunakan. Sila scan batuan lain";
 
   debugLog("QR BLOCKED: sama dengan yang telah digunakan");
+  playSound(soundBlocked);
 
   setTimeout(() => {
     if (currentState === STATE.QR_BLOCKED) {

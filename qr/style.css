@@ -81,13 +81,13 @@ body {
 }
 
 /* ============================================================
-   5) CAMERA BOX (SCANNER)
+   5) CAMERA BOX (SCANNER) – FIXED & STABLE
 ============================================================ */
 .video-box {
   position: relative;
-  width: 100%;
-  max-width: 420px;      /* KECIL & KONSISTEN */
-  margin: 18px auto 10px;
+  width: 420px;
+  height: 420px;          /* SAIZ KEKAL */
+  margin: 18px auto;
   border-radius: 18px;
   overflow: hidden;
   background: #000;
@@ -95,33 +95,25 @@ body {
   box-shadow: 0 0 25px rgba(124,255,154,0.15);
 }
 
-/* Video feed */
+/* VIDEO – isi penuh box, TAK ubah layout */
 #video {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  display: block;
+  height: 100%;
+  object-fit: cover;
   background: #000;
 }
 
-/* Canvas QR (LOGIK KEKAL, SAIZ TERKAWAL) */
+/* CANVAS – UNTUK PROSES QR SAHAJA (TAK NAMPAK) */
 #qr-canvas {
-  width: 260px;
-  height: 260px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;              /* SEMBUNYI */
+  pointer-events: none;
 }
-
-/* Camera status text */
-.camera-status {
-  margin-top: 10px;
-  font-size: 0.95rem;
-  font-weight: bold;
-  color: #9f9;
-}
-
-/* Scan state highlight */
-body.scanning .camera-status {
-  color: var(--accent);
-  text-shadow: 0 0 10px rgba(124,255,154,0.9);
-}
-
 /* ============================================================
    6) SCANNER OVERLAY (KIOSK STYLE)
 ============================================================ */

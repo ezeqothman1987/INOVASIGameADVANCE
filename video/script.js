@@ -1,7 +1,36 @@
 /* ============================================================
    script.js — GEOQUIZ BATTLE MODE (2 PEMAIN)
+   BASED ON ORIGINAL SCRIPT (SAFE EXTENSION)
+   Depends on: gameData.js, input.js, jsQR.js
 ============================================================ */
 
+/* =========================
+   DEBUG
+========================= */
+const DEBUG = true;
+function debugLog(...args) {
+  if (DEBUG) console.log("[BATTLE]", ...args);
+}
+
+/* =========================
+   DOM
+========================= */
+const video = document.getElementById("video");
+const canvas = document.getElementById("qr-canvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+const startBtn = document.getElementById("startBtn");
+const cameraStatus = document.getElementById("cameraStatus");
+
+const roundText = document.getElementById("roundText");
+const timeText = document.getElementById("timeText");
+
+const questionBox = document.getElementById("questionBox");
+const questionText = document.getElementById("questionText");
+
+/* =========================
+   GAME STATE
+========================= */
 const STATE = {
   IDLE: "idle",
   SCANNING: "scanning",
@@ -17,16 +46,46 @@ let currentAnswer = null;
 let timer = null;
 let timeLeft = 0;
 
-// PLAYER DATA
+/* =========================
+   PLAYER DATA (BATTLE)
+========================= */
 const players = {
-  1: { score: 0, answered: false, correct: false },
-  2: { score: 0, answered: false, correct: false }
+  1: { score: 0, answered: false, correct: false, answerTime: null },
+  2: { score: 0, answered: false, correct: false, answerTime: null }
 };
 
 /* =========================
-   START GAME
+   INIT
 ========================= */
+function initBattle() {
+  debugLog("Init Battle Mode");
+
+  updateUI();
+  startBtn.addEventListener("click", handleStartButton);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopCamera();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initBattle);
+
+/* =========================
+   START / STOP
+========================= */
+function handleStartButton() {
+  if (currentState === STATE.IDLE || currentState === STATE.END) {
+    startGame();
+  } else {
+    if (confirm("Hentikan permainan Battle Mode?")) {
+      resetGame();
+    }
+  }
+}
+
 async function startGame() {
+  debugLog("Battle start");
+
   currentRound = 0;
   usedQR.clear();
 
@@ -34,10 +93,32 @@ async function startGame() {
   players[2].score = 0;
 
   updateUI();
+
   currentState = STATE.SCANNING;
+  cameraStatus.textContent = UI_TEXT.SCANNING;
 
   await startCamera();
   scanLoop();
+}
+
+function resetGame() {
+  debugLog("Reset battle game");
+
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  stopCamera();
+
+  currentState = STATE.IDLE;
+  currentRound = 0;
+  usedQR.clear();
+
+  questionBox.style.display = "none";
+  cameraStatus.textContent = UI_TEXT.IDLE;
+
+  updateUI();
 }
 
 /* =========================
@@ -54,6 +135,14 @@ async function startCamera() {
       res();
     };
   });
+}
+
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /* =========================
@@ -76,137 +165,14 @@ function scanLoop(ts = performance.now()) {
 
   requestAnimationFrame(scanLoop);
 }
-/* =========================
-   QUESTION
-========================= */
-function askQuestion(topic) {
-  currentState = STATE.ANSWERING;
-
-  const set = QUESTION_BANK[topic];
-  const pick = set[Math.floor(Math.random() * set.length)];
-
-  currentAnswer = pick.a;
-  questionText.textContent = pick.q;
-  questionBox.style.display = "block";
-
-  players[1].answered = false;
-  players[2].answered = false;
-
-  startTimer();
-}
 
 /* =========================
-   TIMER
+   UI
 ========================= */
-function startTimer() {
-  timeLeft = GAME_CONFIG.ANSWER_TIME;
-  timeText.textContent = timeLeft;
-
-  timer = setInterval(() => {
-    timeLeft--;
-    timeText.textContent = timeLeft;
-
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      finishRound();
-    }
-  }, 1000);
+function updateUI() {
+  roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
+  startBtn.textContent =
+    currentState === STATE.IDLE || currentState === STATE.END
+      ? "MULA BATTLE"
+      : "HENTIKAN";
 }
-
-/* =========================
-   INPUT CALLBACK
-========================= */
-window.playerAnswer = function (player, ans) {
-  if (currentState !== STATE.ANSWERING) return;
-  if (players[player].answered) return;
-
-  players[player].answered = true;
-  players[player].correct = ans === currentAnswer;
-
-  // siapa paling cepat & betul
-  if (players[player].correct) {
-    const earned = Math.max(
-      GAME_CONFIG.SCORE.MIN,
-      Math.min(GAME_CONFIG.SCORE.MAX, timeLeft)
-    );
-    players[player].score += earned;
-  }
-
-  // tunggu kedua-dua jawab
-  if (players[1].answered && players[2].answered) {
-    clearInterval(timer);
-    finishRound();
-  }
-};
-
-/* =========================
-   ROUND END
-========================= */
-function finishRound() {
-  currentRound++;
-  updateUI();
-
-  questionBox.style.display = "none";
-
-  if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
-    endGame();
-  } else {
-    currentState = STATE.SCANNING;
-    scanLoop();
-  }
-}
-
-/* =========================
-   END GAME + HOF
-========================= */
-function endGame() {
-  currentState = STATE.END;
-
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-
-  const winner =
-    players[1].score > players[2].score ? "P1" :
-    players[2].score > players[1].score ? "P2" : "DRAW";
-
-  addBattleHOF(players[1].score, players[2].score, winner);
-}
-
-/* =========================
-   HALL OF FAME (BATTLE)
-========================= */
-const HOF_KEY = "geoquiz_battle_hof";
-
-function addBattleHOF(p1, p2, winner) {
-  const list = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
-
-  list.push({
-    p1, p2, winner,
-    date: new Date().toLocaleDateString("ms-MY")
-  });
-
-  list.sort((a, b) => (b.p1 + b.p2) - (a.p1 + a.p2));
-  localStorage.setItem(HOF_KEY, JSON.stringify(list.slice(0, 5)));
-  renderBattleHOF();
-}
-
-function renderBattleHOF() {
-  const ul = document.getElementById("hofVideo");
-  if (!ul) return;
-
-  ul.innerHTML = "";
-  const list = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
-
-  list.forEach((r, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>${i + 1}. ${r.winner}</strong><br>
-      P1: ${r.p1} | P2: ${r.p2}
-      <small>(${r.date})</small>
-    `;
-    ul.appendChild(li);
-  });
-}
-

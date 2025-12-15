@@ -14,20 +14,21 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="static/image/favicon.png">
 </head>
-<body>
+<body class="idle">
 
 <!-- =====================================================
-     FULLSCREEN BUTTON (OPTIONAL – boleh disable Event Mode)
+     FULLSCREEN & BACK HOME
      ===================================================== -->
 <div id="fullscreenBtn" class="fullscreen-btn">
     ⛶ Fullscreen
 </div>
-    <div id="backHomeBtn" class="back-home-btn">
-  🏠 Menu Utama
+
+<div id="backHomeBtn" class="back-home-btn">
+    🏠 Menu Utama
 </div>
 
 <!-- =====================================================
-     HALL OF FAME (KEKAL)
+     HALL OF FAME
      ===================================================== -->
 <aside id="hallOfFameSidebar" class="sidebar">
     <h2>🏆 Hall of Fame</h2>
@@ -43,23 +44,23 @@
     <!-- ======================
          TAJUK PERMAINAN
          ====================== -->
-    <h1 class="title">🪨 GEOQUIZ 2P COOP/BATTLE 🪨</h1>
+    <h1 class="title">🪨 GEOQUIZ 2P COOP / BATTLE 🪨</h1>
 
     <!-- ======================
          START / CONTROL PANEL
          ====================== -->
     <div class="control-panel">
-    <button id="startGameBtn" class="start-btn">
-        🎮 Mula Bermain
-    </button>
+        <button id="startGameBtn" class="start-btn">
+            🎮 Mula Bermain
+        </button>
 
-    <button id="stopGameBtn" class="start-btn">
-        ⛔ Henti
-    </button>
+        <button id="stopGameBtn" class="start-btn">
+            ⛔ Henti
+        </button>
     </div>
 
     <!-- ======================
-         SCOREBOARD (BESAR & JELAS)
+         SCOREBOARD
          ====================== -->
     <section class="scoreboard">
         <div class="player-score p1">
@@ -93,16 +94,55 @@
          QUESTION / IMAGE AREA
          ====================== -->
     <section class="question-area">
-        <!-- 
-          Gambar soalan akan diisi oleh script.js
-          (boleh guna gambar / QR / apa-apa media)
-        -->
         <img
             id="questionImage"
             src=""
             alt="Soalan"
             class="question-image"
         >
+    </section>
+
+    <!-- =================================================
+         🔥 BATTLE INPUT CONTROLS (DITAMBAH)
+         ================================================= -->
+    <section class="battle-controls">
+
+        <!-- PEMAIN 1 -->
+        <div class="player-controls p1">
+            <div class="player-label">Pemain 1</div>
+            <div class="button-row">
+                <button class="battle-btn correct"
+                        data-player="1"
+                        data-answer="true">
+                    A
+                </button>
+
+                <button class="battle-btn wrong"
+                        data-player="1"
+                        data-answer="false">
+                    B
+                </button>
+            </div>
+        </div>
+
+        <!-- PEMAIN 2 -->
+        <div class="player-controls p2">
+            <div class="player-label">Pemain 2</div>
+            <div class="button-row">
+                <button class="battle-btn correct"
+                        data-player="2"
+                        data-answer="true">
+                    ←
+                </button>
+
+                <button class="battle-btn wrong"
+                        data-player="2"
+                        data-answer="false">
+                    →
+                </button>
+            </div>
+        </div>
+
     </section>
 
     <!-- ======================
@@ -121,13 +161,13 @@
     <div class="modal-content">
         <h2>🏁 Tamat Permainan</h2>
 
-        <p>
-            Keputusan Akhir
-        </p>
+        <p>Keputusan Akhir</p>
 
         <p>
-            Pemain 1: <strong><span id="finalScoreP1">0</span></strong><br>
-            Pemain 2: <strong><span id="finalScoreP2">0</span></strong>
+            Pemain 1:
+            <strong><span id="finalScoreP1">0</span></strong><br>
+            Pemain 2:
+            <strong><span id="finalScoreP2">0</span></strong>
         </p>
 
         <input
@@ -142,10 +182,9 @@
         </div>
     </div>
 </div>
-    
+
 <!-- =====================================================
      GAME ENGINE
-     (script.js akan handle semua logic)
      ===================================================== -->
 <script type="module" src="script.js"></script>
 

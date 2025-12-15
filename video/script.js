@@ -1,505 +1,412 @@
-/* =====================================================
-   GEO QUIZ – 2 PLAYER EVENT MODE
-   script.js (FINAL, DISUSUN & DIKEMASKAN)
-   ===================================================== */
+/* ============================================================
+   script.js — GEOQUIZ BATTLE MODE (2 PLAYER)
+   - Based on QR GeoQuiz
+   - Flow: Scan → Question → P1 & P2 Answer → Score → Next
+============================================================ */
 
-/* =====================
-   IMPORT KONFIGURASI GAME
-   ===================== */
-import { TOTAL_ROUNDS, ROUND_TIME, SPEED_BONUS, ROUNDS } from "./gameData.js";
-import { initInputHandlers } from "./input.js";
-
-const DEBUG = false; //tukar true/false  debug
-
-/* =====================
-   DEBUG OVERLAY
-   ===================== */
-let debugBox = null;
-
-function initDebugOverlay() {
-  if (!DEBUG) return;
-
-  debugBox = document.createElement("div");
-  debugBox.id = "debugOverlay";
-
-  Object.assign(debugBox.style, {
-    position: "fixed",
-    bottom: "10px",
-    right: "10px",
-    width: "300px",
-    maxHeight: "40vh",
-    overflowY: "auto",
-    background: "rgba(0,0,0,0.85)",
-    color: "#0f0",
-    fontFamily: "monospace",
-    fontSize: "12px",
-    padding: "10px",
-    borderRadius: "8px",
-    zIndex: 9999
-  });
-
-  debugBox.innerHTML = "<b>DEBUG MODE</b><hr>";
-  document.body.appendChild(debugBox);
+/* =========================
+   DEBUG
+========================= */
+const DEBUG = true;
+function debugLog(...args) {
+  if (DEBUG) console.log("[DEBUG]", ...args);
 }
 
-function debugLog(msg, data = null) {
-  if (!DEBUG || !debugBox) return;
+/* =========================
+   SCAN THROTTLE
+========================= */
+const SCAN_INTERVAL = 120;
+let lastScanTime = 0;
 
-  const div = document.createElement("div");
-  div.textContent =
-    `[${new Date().toLocaleTimeString()}] ${msg}` +
-    (data ? " → " + JSON.stringify(data) : "");
+/* =========================
+   DOM
+========================= */
+const video = document.getElementById("video");
+const canvas = document.getElementById("qr-canvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-  debugBox.appendChild(div);
-  debugBox.scrollTop = debugBox.scrollHeight;
-}
-function debugState(tag = "") {
-  debugLog("STATE " + tag, {
-    gameActive,
-    roundLocked,
-    currentRound,
-    timer,
-    answeredP1,
-    answeredP2
-  });
-}
+const startBtn = document.getElementById("startBtn");
+const cameraStatus = document.getElementById("cameraStatus");
 
-/* =====================
-   ELEMENT UI
-   ===================== */
-const startBtn = document.getElementById("startGameBtn");
-const stopBtn = document.getElementById("stopGameBtn");
-const timerEl = document.getElementById("timer");
-const roundEl = document.getElementById("round");
-const scoreP1El = document.getElementById("scoreP1");
-const scoreP2El = document.getElementById("scoreP2");
-const statusText = document.getElementById("statusText");
-const questionImage = document.getElementById("questionImage");
+const roundText = document.getElementById("roundText");
+const scoreText = document.getElementById("scoreText");
+const timeText = document.getElementById("timeText");
 
-const endModal = document.getElementById("endModal");
-const finalScoreP1El = document.getElementById("finalScoreP1");
-const finalScoreP2El = document.getElementById("finalScoreP2");
-const restartBtn = document.getElementById("restartBtn");
-const saveHOFBtn = document.getElementById("saveHOFBtn");
-const clearHOFBtn = document.getElementById("clearHOFBtn");
-const HOF_KEY = "hof_video";
+const questionBox = document.getElementById("questionBox");
+const questionText = document.getElementById("questionText");
+const timeBarFill = document.getElementById("timeBarFill");
 
-
-/* =====================
-   FULLSCREEN HANDLER
-   ===================== */
 const fullscreenBtn = document.getElementById("fullscreenBtn");
-if (fullscreenBtn) {
-  fullscreenBtn.addEventListener("click", () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen();
-    }
-  });
-}
+const backHomeBtn = document.querySelector(".back-home-btn");
 
-/* =====================
-   AUDIO EFFECT
-   ===================== */
+/* =========================
+   AUDIO
+========================= */
 const AUDIO_PATH = "../static/sound/";
-
 const soundCorrect = new Audio(`${AUDIO_PATH}yay.mp3`);
-const soundWrong   = new Audio(`${AUDIO_PATH}boo.mp3`);
+const soundWrong = new Audio(`${AUDIO_PATH}boo.mp3`);
+const audioClap = new Audio(`${AUDIO_PATH}clap.mp3`);
+const soundBlocked = new Audio(`${AUDIO_PATH}blocked.mp3`);
 
-function playSound(audio) {
-  if (!audio) return;
+function playSound(a) {
   try {
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  } catch(e) {}
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  } catch {}
 }
 
-/* =====================
-   STATE GAME
-   ===================== */
-let currentRound = 1;
-let timer = ROUND_TIME;
-let timerInterval = null;
-let gameActive = false;
-let roundLocked = false;
-let imageLoaded = false;
+/* =========================
+   GAME STATE
+========================= */
+const STATE = {
+  IDLE: "idle",
+  SCANNING: "scanning",
+  ANSWERING: "answering",
+  PAUSE: "pause",
+  QR_BLOCKED: "qr_blocked",
+  END: "end"
+};
 
-/* =====================
-   STATE PEMAIN
-   ===================== */
+let currentState = STATE.IDLE;
+let currentRound = 0;
+let usedQR = new Set();
+let timer = null;
+let timeLeft = 0;
+let currentAnswer = null;
+
+/* =========================
+   PLAYER STATE (BATTLE)
+========================= */
 let scoreP1 = 0;
 let scoreP2 = 0;
 
-let answeredP1 = false;
-let answeredP2 = false;
+let players = {
+  1: { answered: false, correct: false, time: 0 },
+  2: { answered: false, correct: false, time: 0 }
+};
 
-let timeP1 = null;
-let timeP2 = null;
+function resetPlayerAnswers() {
+  players[1] = { answered: false, correct: false, time: 0 };
+  players[2] = { answered: false, correct: false, time: 0 };
+}
 
-let answerP1 = null;
-let answerP2 = null;
+/* =========================
+   BUTTON LOCK
+========================= */
+function updateStartButtonLock() {
+  startBtn.disabled =
+    currentState === STATE.ANSWERING || currentState === STATE.PAUSE;
+}
 
-/* =====================
-   SET SOALAN RAWAK
-   ===================== */
-let activeRounds = [];
-function setupRandomRounds() {
-  const shuffled = [...ROUNDS].sort(() => Math.random() - 0.5);
-  activeRounds = shuffled.slice(0, TOTAL_ROUNDS);
-  
-   debugLog("setupRandomRounds()", {
-    totalRounds: TOTAL_ROUNDS,
-    available: ROUNDS.length,
-    active: activeRounds.length
+/* =========================
+   INIT
+========================= */
+function init() {
+  updateUI();
+
+  startBtn.addEventListener("click", handleStartButton);
+
+  document.querySelectorAll(".battle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const p = Number(btn.dataset.player);
+      const ans =
+        btn.dataset.answer === "true"
+          ? true
+          : btn.dataset.answer === "false"
+          ? false
+          : null;
+
+      playerAnswer(p, ans);
+    });
+  });
+
+  fullscreenBtn?.addEventListener("click", toggleFullscreen);
+  backHomeBtn?.addEventListener("click", goBackHome);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopCameraAndScan();
   });
 }
 
-/* =====================
-   API UNTUK input.js
-   ===================== */
-function submitAnswer(player, answer) {
-    debugLog(`submitAnswer P${player}`, answer);
-  if (!gameActive || roundLocked) return;
+document.addEventListener("DOMContentLoaded", init);
 
-  if (player === 1 && !answeredP1) {
-    answeredP1 = true;
-    answerP1 = answer;
-    timeP1 = ROUND_TIME - timer;
-    statusText.textContent = "Pemain 1 telah jawab";
+/* =========================
+   START / STOP
+========================= */
+function handleStartButton() {
+  if (currentState === STATE.IDLE || currentState === STATE.END) {
+    startGame();
+    return;
   }
 
-  if (player === 2 && !answeredP2) {
-    answeredP2 = true;
-    answerP2 = answer;
-    timeP2 = ROUND_TIME - timer;
-    statusText.textContent = "Pemain 2 telah jawab";
-  }
-
-  if (answeredP1 && answeredP2) {
-    lockAnswers();
+  if (confirm("Hentikan permainan?")) {
+    resetGame();
   }
 }
 
-function isActive() { return gameActive; }
-function hasAnsweredP1() { return answeredP1; }
-function hasAnsweredP2() { return answeredP2; }
-
-// Init input sekali sahaja
-initInputHandlers({ submitAnswer, isActive, hasAnsweredP1, hasAnsweredP2 });
-
-/* =====================
-   UTILITI UI
-   ===================== */
+/* =========================
+   UI
+========================= */
 function updateUI() {
-  scoreP1El.textContent = scoreP1;
-  scoreP2El.textContent = scoreP2;
-  timerEl.textContent = timer;
-  roundEl.textContent = currentRound;
+  roundText.textContent = `${currentRound} / ${GAME_CONFIG.TOTAL_ROUNDS}`;
+  scoreText.textContent = `P1: ${scoreP1} | P2: ${scoreP2}`;
+  startBtn.textContent =
+    currentState === STATE.IDLE || currentState === STATE.END
+      ? "MULA PERMAINAN"
+      : "HENTIKAN";
 }
 
-function resetRoundState() {
-  answeredP1 = false;
-  answeredP2 = false;
-  answerP1 = null;
-  answerP2 = null;
-  timeP1 = null;
-  timeP2 = null;
-  imageLoaded = false;
-}
-
-/* =====================
-   START / STOP GAME
-   ===================== */
-startBtn.addEventListener("click", startGame);
-if (stopBtn) stopBtn.addEventListener("click", stopGame);
-
-function startGame() {
-     debugLog("startGame()");
-   document.body.classList.add("game-started"); // 🔴 HIDE HOF
+/* =========================
+   GAME FLOW
+========================= */
+async function startGame() {
   scoreP1 = 0;
   scoreP2 = 0;
-  currentRound = 1;
+  currentRound = 0;
+  usedQR.clear();
 
-  setupRandomRounds();
+  currentState = STATE.SCANNING;
   updateUI();
+  updateStartButtonLock();
 
-  gameActive = true;
-  roundLocked = false;
+  cameraStatus.textContent = UI_TEXT.SCANNING;
 
-  statusText.textContent = "Pusingan bermula!";
-  startRound();
+  await startCamera();
+  scanLoop();
 }
 
-function stopGame() {
-   debugLog("stopGame()");
-  document.body.classList.remove("game-started"); // 🟢 SHOW HOF
-  gameActive = false;
-  roundLocked = true;
-  clearInterval(timerInterval);
-  statusText.textContent = "Permainan dihentikan.";
-}
+/* =========================
+   CAMERA
+========================= */
+async function startCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
 
-/* =====================
-   START ROUND
-   ===================== */
-function startRound() {
-     debugLog("startRound()", currentRound);
-  resetRoundState();
-  roundLocked = false;
-
-  timer = ROUND_TIME;
-  updateUI();
-
-  const roundData = activeRounds[currentRound - 1];
-  if (!roundData) return endGame();
-
-  questionImage.style.opacity = "0.3";
-  questionImage.src = roundData.image;
-  statusText.textContent = "Memuatkan soalan…";
-
-  questionImage.onload = () => {
-     debugLog("image loaded", questionImage.src);
-    imageLoaded = true;
-    questionImage.style.opacity = "1";
-    statusText.textContent = "Jawab sekarang!";
-
-    timerInterval = setInterval(() => {
-      timer--;
-      timerEl.textContent = timer;
-      if (timer <= 0) {
-        clearInterval(timerInterval);
-        lockAnswers();
-      }
-    }, 1000);
-  };
-
-questionImage.onerror = () => {
-  debugLog("IMAGE LOAD FAILED", questionImage.src);
-
-  statusText.textContent = "Soalan gagal dimuatkan";
-  lockAnswers(); // elak game tersekat
-};
-}
-
-/* =====================
-   LOCK & SCORE
-   ===================== */
-function lockAnswers() {
-     debugLog("lockAnswers()", {
-    round: currentRound,
-    correct: activeRounds[currentRound - 1]?.correct,
-    p1: answerP1,
-    p2: answerP2,
-    timeP1,
-    timeP2
+  return new Promise(res => {
+    video.onloadedmetadata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      res();
+    };
   });
-  if (roundLocked) return;
-  roundLocked = true;
-  clearInterval(timerInterval);
+}
 
-  const roundData = activeRounds[currentRound - 1];
-  const correct = roundData.correct; // "A" / "B"
+function stopCameraAndScan() {
+  currentState = STATE.IDLE;
+  if (video?.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
-  let anyCorrect = false;
+/* =========================
+   SCAN LOOP
+========================= */
+function scanLoop(ts) {
+  if (currentState !== STATE.SCANNING) return;
 
-  if (answerP1 === correct) { scoreP1 += 10; anyCorrect = true; }
-  if (answerP2 === correct) { scoreP2 += 10; anyCorrect = true; }
+  if (ts - lastScanTime < SCAN_INTERVAL) {
+    requestAnimationFrame(scanLoop);
+    return;
+  }
+  lastScanTime = ts;
 
-  if (answerP1 === correct && answerP2 === correct) {
-    if (timeP1 < timeP2) scoreP1 += SPEED_BONUS;
-    if (timeP2 < timeP1) scoreP2 += SPEED_BONUS;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const qr = jsQR(img.data, img.width, img.height);
+
+  if (qr) {
+    handleQR(qr.data.trim());
+    return;
   }
 
-  playSound(anyCorrect ? soundCorrect : soundWrong);
-  updateUI();
-
-  setTimeout(nextRound, 1000);
+  requestAnimationFrame(scanLoop);
 }
 
-/* =====================
-   NEXT ROUND / END GAME
-   ===================== */
-function nextRound() {
-     debugLog("nextRound()", {
-    next: currentRound + 1,
-    total: TOTAL_ROUNDS
-  });
-  currentRound++;
-  if (currentRound > TOTAL_ROUNDS) endGame();
-  else startRound();
+/* =========================
+   QR HANDLER
+========================= */
+function handleQR(payload) {
+  if (!VALID_QR.includes(payload)) {
+    scanLoop();
+    return;
+  }
+
+  if (usedQR.has(payload)) {
+    showQRBlockedMessage();
+    return;
+  }
+
+  usedQR.add(payload);
+  askQuestion(payload);
 }
 
-function endGame() {
-     debugLog("endGame()");
-  gameActive = false;
-  roundLocked = true;
+function showQRBlockedMessage() {
+  currentState = STATE.QR_BLOCKED;
+  cameraStatus.textContent = "QR telah digunakan";
+  playSound(soundBlocked);
 
-  finalScoreP1El.textContent = scoreP1;
-  finalScoreP2El.textContent = scoreP2;
-   saveHOFBtn.disabled = false;              // ✅ reset butang
-  saveHOFBtn.textContent = "Simpan Hall of Fame";
-  endModal.style.display = "flex";
-requestAnimationFrame(() => {
-  endModal.classList.add("show");
-});
-     setTimeout(() => {
-    const nameInput = document.getElementById("playerName");
-    if (nameInput) {
-      nameInput.focus();
-      nameInput.select();
-      debugLog("Name input focused");
+  setTimeout(() => {
+    if (currentState === STATE.QR_BLOCKED) {
+      currentState = STATE.SCANNING;
+      cameraStatus.textContent = UI_TEXT.SCANNING;
+      scanLoop();
     }
-  }, 100);
+  }, 1200);
 }
 
-restartBtn.addEventListener("click", () => {
-  endModal.classList.remove("show");
+/* =========================
+   QUESTION
+========================= */
+function askQuestion(topic) {
+  currentState = STATE.ANSWERING;
+  updateStartButtonLock();
+  resetPlayerAnswers();
 
-  setTimeout(() => {
-    endModal.style.display = "none";
-    startGame();
-  }, 300);
-});
+  const set = QUESTION_BANK[topic];
+  const pick = set[Math.floor(Math.random() * set.length)];
 
-/* =====================
-   HALL OF FAME (2 PEMAIN)
-   ===================== */
-saveHOFBtn.addEventListener("click", saveHallOfFame);
+  currentAnswer = pick.a;
+  questionText.textContent = pick.q;
+  questionBox.style.display = "block";
 
-function saveHallOfFame() {
-  if (saveHOFBtn.disabled) return;
-
-  saveHOFBtn.disabled = true;
-
-  const nameInput = document.getElementById("playerName");
-  const name = nameInput?.value.trim() || "Tanpa Nama";
-
-  const record = {
-    name,
-    scoreP1,
-    scoreP2,
-    total: scoreP1 + scoreP2,
-    date: new Date().toLocaleString(),
-    isNew: true
-  };
-
-  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
-  hof.forEach(r => r.isNew = false);
-  hof.push(record);
-hof.sort((a, b) => b.total - a.total);
-
-// Semak ranking baru
-const rank = hof.findIndex(r => r === record);
-if (rank >= 0 && rank < 3) {
-  debugLog("🎉 TOP 3!", { rank: rank + 1 });
-  launchConfetti();
+  startTimer();
 }
-localStorage.setItem(HOF_KEY, JSON.stringify(hof.slice(0, 10)));
 
-  loadHallOfFame();
-  debugLog("HOF saved", record);
+/* =========================
+   TIMER
+========================= */
+function startTimer() {
+  timeLeft = GAME_CONFIG.ANSWER_TIME;
+  timeText.textContent = timeLeft;
+  timeBarFill.style.width = "100%";
 
-  // Clear input
-  if (nameInput) nameInput.value = "";
+  timer = setInterval(() => {
+    timeLeft--;
+    timeText.textContent = timeLeft;
+    timeBarFill.style.width =
+      (timeLeft / GAME_CONFIG.ANSWER_TIME) * 100 + "%";
 
-  endModal.classList.remove("show");
-
-  setTimeout(() => {
-    endModal.style.display = "none";
-    saveHOFBtn.disabled = false;
-  }, 300);
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (!players[1].answered) playerAnswer(1, null);
+      if (!players[2].answered) playerAnswer(2, null);
+    }
+  }, 1000);
 }
-//boleh tekan enter nak add hof
-document.addEventListener("keydown", (e) => {
-  if (!endModal || endModal.style.display !== "flex") return;
-  if (saveHOFBtn.disabled) return;
 
-  if (e.key === "Enter") {
-    e.preventDefault();
-    debugLog("Enter pressed → saveHallOfFame()");
-    saveHallOfFame();
-  }
-});
-//masuk top3 ade confetti
-function launchConfetti(count = 120) {
-  for (let i = 0; i < count; i++) {
-    const confetti = document.createElement("div");
-    confetti.className = "confetti";
+/* =========================
+   PLAYER ANSWER
+========================= */
+function playerAnswer(playerId, answer) {
+  if (currentState !== STATE.ANSWERING) return;
+  if (players[playerId].answered) return;
 
-    const colors = ["#FFD700", "#FF5733", "#33FF57", "#3399FF", "#FF33A8"];
-    confetti.style.backgroundColor =
-      colors[Math.floor(Math.random() * colors.length)];
+  players[playerId].answered = true;
+  players[playerId].correct = answer === currentAnswer;
+  players[playerId].time = timeLeft;
 
-    confetti.style.left = Math.random() * 100 + "vw";
-    confetti.style.animationDuration = 2 + Math.random() * 2 + "s";
+  updateWaitingStatus();
 
-    document.body.appendChild(confetti);
-
-    setTimeout(() => confetti.remove(), 4000);
+  if (players[1].answered && players[2].answered) {
+    clearInterval(timer);
+    scoreBattleRound();
+    pauseNext();
   }
 }
-//reset hof
-if (clearHOFBtn) {
-  clearHOFBtn.addEventListener("click", resetHallOfFame);
-}
-function resetHallOfFame() {
-  if (!confirm("Anda pasti mahu padam Hall of Fame?")) return;
-  localStorage.removeItem(HOF_KEY);
-  loadHallOfFame();
-  debugLog("HALL OF FAME RESET");
-}
-function updateClearHOFButton() {
-  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
-  clearHOFBtn.disabled = hof.length === 0;
-}
-//load hof
-function loadHallOfFame() {
-  const list = document.getElementById("hofList");
-  if (!list) return;
 
-  const hof = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
-  list.innerHTML = "";
+function updateWaitingStatus() {
+  if (!players[1].answered)
+    cameraStatus.textContent = "Menunggu Pemain 1...";
+  else if (!players[2].answered)
+    cameraStatus.textContent = "Menunggu Pemain 2...";
+}
 
-  hof.forEach((r, i) => {
-    const li = document.createElement("li");
-    li.classList.add("hof-item");
-    if (i === 0) li.classList.add("hof-top", "gold");
-    else if (i === 1) li.classList.add("hof-top", "silver");
-    else if (i === 2) li.classList.add("hof-top", "bronze");
-    if (r.isNew) li.classList.add("hof-new");
+/* =========================
+   SCORE
+========================= */
+function scoreBattleRound() {
+  [1, 2].forEach(id => {
+    const p = players[id];
+    if (!p.correct) return;
 
-    li.innerHTML = `
-      <div class="hof-name">${i + 1}. ${r.name}</div>
-      <div class="hof-score">P1: ${r.scoreP1} | P2: ${r.scoreP2} | <strong>Jumlah: ${r.total}</strong></div>
-      <div class="hof-date">📅 ${r.date}</div>
-    `;
-    list.appendChild(li);
+    const earned = Math.max(
+      GAME_CONFIG.SCORE.MIN,
+      Math.min(GAME_CONFIG.SCORE.MAX, p.time)
+    );
+
+    id === 1 ? (scoreP1 += earned) : (scoreP2 += earned);
+    playSound(soundCorrect);
   });
+
+  currentRound++;
+  updateUI();
 }
-updateClearHOFButton();
-/* =====================
-   INIT
-   ===================== */
-document.addEventListener("DOMContentLoaded", () => {
-  loadHallOfFame();
-  initDebugOverlay();
 
-  const backBtn = document.getElementById("backHomeBtn");
+/* =========================
+   PAUSE / NEXT
+========================= */
+function pauseNext() {
+  currentState = STATE.PAUSE;
+  updateStartButtonLock();
 
-  if (backBtn && !backBtn.dataset.bound) {
-    backBtn.dataset.bound = "1";
+  setTimeout(() => {
+    questionBox.style.display = "none";
 
-    backBtn.addEventListener("click", () => {
-      if (!confirm("Keluar dan kembali ke Menu Utama?")) return;
+    if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
+      endGame();
+    } else {
+      currentState = STATE.SCANNING;
+      cameraStatus.textContent = UI_TEXT.SCANNING;
+      scanLoop();
+    }
+  }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
+}
 
-      // 🛑 SAFE CLEANUP (tak akan error walaupun function tiada)
-      if (typeof stopGame === "function") stopGame();
-      if (typeof stopVideo === "function") stopVideo();
-      if (typeof stopCamera === "function") stopCamera();
-      if (typeof stopTimer === "function") stopTimer();
+/* =========================
+   END
+========================= */
+function endGame() {
+  currentState = STATE.END;
+  updateStartButtonLock();
 
-      window.location.href = "../index.html";
-    });
-  }
-});
+  stopCameraAndScan();
+  playSound(audioClap);
+  cameraStatus.textContent = UI_TEXT.CONGRATS;
+}
+
+/* =========================
+   RESET
+========================= */
+function resetGame() {
+  if (timer) clearInterval(timer);
+
+  stopCameraAndScan();
+
+  currentState = STATE.IDLE;
+  currentRound = 0;
+  scoreP1 = 0;
+  scoreP2 = 0;
+  usedQR.clear();
+  resetPlayerAnswers();
+
+  questionBox.style.display = "none";
+  cameraStatus.textContent = UI_TEXT.IDLE;
+
+  updateUI();
+}
+
+/* =========================
+   UTIL
+========================= */
+function toggleFullscreen() {
+  if (!document.fullscreenElement)
+    document.documentElement.requestFullscreen().catch(() => {});
+  else document.exitFullscreen();
+}
+
+function goBackHome() {
+  if (currentState !== STATE.IDLE && !confirm("Keluar ke menu utama?")) return;
+  window.location.href = "../index.html";
+}

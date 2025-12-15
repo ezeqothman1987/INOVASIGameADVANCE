@@ -1,41 +1,23 @@
 /* ============================================================
-   gameData.js
+   gameData.js — GEOQUIZ (GAME 1)
    ------------------------------------------------------------
-   EDIT FAIL INI SAHAJA UNTUK UBAH GAME
-   JANGAN TAMBAH LOGIK / TIMER / EVENT
+   ❗ EDIT FAIL INI SAHAJA UNTUK UBAH GAME
+   ❌ JANGAN TAMBAH LOGIK / TIMER / EVENT
+   ✔ DIGUNAKAN OLEH script.js
 ============================================================ */
 
 /* =========================
    GAME CONFIG
 ========================= */
 const GAME_CONFIG = {
-  TOTAL_ROUNDS: 5,          // bilangan objek / pusingan
-  ANSWER_TIME: 20,          // masa jawab (saat)
-  PAUSE_AFTER_CORRECT: 3,   // pause lepas betul (saat)
+  TOTAL_ROUNDS: 5,          // Bilangan pusingan / QR
+  ANSWER_TIME: 20,          // Masa jawab (saat)
+  PAUSE_AFTER_CORRECT: 3,   // Pause lepas betul (saat)
 
   SCORE: {
     MAX: 10,
     MIN: 1
   }
-};
-
-/* =========================
-   QR PAYLOAD
-   (Pemain TIDAK NAMPAK)
-========================= */
-const QR_PAYLOAD = {
-  BETUL: "betul",
-  SALAH: "salah"
-};
-
-/* =========================
-   AUDIO FILE
-========================= */
-const GAME_AUDIO = {
-  CORRECT: "qr/static/sound/correct.mp3",
-  WRONG: "qr/static/sound/wrong.mp3",
-  CONGRATS: "qr/static/sound/congrats.mp3",
-  COUNTDOWN: "qr/static/sound/countdown.mp3"
 };
 
 /* =========================
@@ -48,3 +30,36 @@ const UI_TEXT = {
   CONGRATS: "TAHNIAH!",
   GAME_OVER: "PERMAINAN TAMAT"
 };
+
+/* =========================
+   QUESTION BANK (GAME 1)
+   - QR payload → set soalan
+   - Boleh tambah batu / topik
+========================= */
+const QUESTION_BANK = {
+  Granit: [
+    { q: "Granit ialah batuan igneus?", a: true },
+    { q: "Granit terbentuk di permukaan bumi?", a: false }
+  ],
+
+  Syis: [
+    { q: "Syis ialah batuan metamorf?", a: true },
+    { q: "Syis terbentuk dari lava?", a: false }
+  ],
+
+  Kuarzit: [
+    { q: "Kuarzit berasal dari batu pasir?", a: true },
+    { q: "Kuarzit ialah batuan igneus?", a: false }
+  ]
+
+  // 🔒 Simpan untuk masa depan
+  // Basalt: [],
+  // Gneiss: [],
+  // Marble: []
+};
+
+/* =========================
+   VALID QR LIST
+   (DIGUNAKAN OLEH script.js)
+========================= */
+const VALID_QR = Object.keys(QUESTION_BANK);

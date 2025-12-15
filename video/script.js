@@ -190,3 +190,168 @@ function updateUI() {
       ? "MULA BATTLE"
       : "HENTIKAN";
 }
+/* ============================================================
+   BATTLE MODE — GAME FLOW (PART 2)
+============================================================ */
+
+/* =========================
+   BATTLE STATE
+========================= */
+let answeredP1 = false;
+let answeredP2 = false;
+
+let answerTimeP1 = null;
+let answerTimeP2 = null;
+
+let answerP1 = null;
+let answerP2 = null;
+
+/* =========================
+   START GAME
+========================= */
+function startGame() {
+  debugLog("Battle Start");
+
+  currentRound = 1;
+  scoreP1 = 0;
+  scoreP2 = 0;
+
+  updateUI();
+
+  currentState = STATE.SCANNING;
+  statusText.textContent = UI_TEXT.SCANNING;
+
+  startCamera().then(scanLoop);
+}
+
+/* =========================
+   QUESTION START
+========================= */
+function askQuestion(topic) {
+  debugLog("Question topic:", topic);
+
+  currentState = STATE.ANSWERING;
+
+  const set = QUESTION_BANK[topic];
+  const pick = set[Math.floor(Math.random() * set.length)];
+
+  currentAnswer = pick.a;
+
+  answeredP1 = false;
+  answeredP2 = false;
+
+  answerTimeP1 = null;
+  answerTimeP2 = null;
+
+  answerP1 = null;
+  answerP2 = null;
+
+  statusText.textContent = UI_TEXT.ANSWER;
+
+  startTimer();
+}
+
+/* =========================
+   TIMER
+========================= */
+function startTimer() {
+  timeLeft = GAME_CONFIG.ANSWER_TIME;
+  timerText.textContent = timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    timerText.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      endRound();
+    }
+  }, 1000);
+}
+
+/* =========================
+   INPUT CALLBACK (2 PLAYER)
+========================= */
+window.playerAnswer = function (player, ans) {
+  if (currentState !== STATE.ANSWERING) return;
+
+  const now = Date.now();
+
+  if (player === 1 && !answeredP1) {
+    answeredP1 = true;
+    answerP1 = ans;
+    answerTimeP1 = now;
+    debugLog("P1 answered", ans);
+  }
+
+  if (player === 2 && !answeredP2) {
+    answeredP2 = true;
+    answerP2 = ans;
+    answerTimeP2 = now;
+    debugLog("P2 answered", ans);
+  }
+
+  if (answeredP1 && answeredP2) {
+    clearInterval(timer);
+    endRound();
+  }
+};
+
+/* =========================
+   END ROUND
+========================= */
+function endRound() {
+  debugLog("End Round");
+
+  if (answerP1 === currentAnswer) {
+    scoreP1 += calcScore(answerTimeP1);
+  }
+
+  if (answerP2 === currentAnswer) {
+    scoreP2 += calcScore(answerTimeP2);
+  }
+
+  updateUI();
+
+  setTimeout(() => {
+    if (currentRound >= GAME_CONFIG.TOTAL_ROUNDS) {
+      endGame();
+    } else {
+      currentRound++;
+      statusText.textContent = UI_TEXT.SCANNING;
+      currentState = STATE.SCANNING;
+      scanLoop();
+    }
+  }, GAME_CONFIG.PAUSE_AFTER_CORRECT * 1000);
+}
+
+/* =========================
+   SCORE CALC
+========================= */
+function calcScore(answerTime) {
+  if (!answerTime) return 0;
+
+  const delta = (Date.now() - answerTime) / 1000;
+  const raw = GAME_CONFIG.ANSWER_TIME - delta;
+
+  return Math.max(
+    GAME_CONFIG.SCORE.MIN,
+    Math.min(GAME_CONFIG.SCORE.MAX, Math.floor(raw))
+  );
+}
+
+/* =========================
+   END GAME
+========================= */
+function endGame() {
+  debugLog("Battle End");
+
+  currentState = STATE.END;
+  statusText.textContent = UI_TEXT.GAME_OVER;
+
+  finalScoreP1.textContent = scoreP1;
+  finalScoreP2.textContent = scoreP2;
+
+  endModal.style.display = "flex";
+}
+

@@ -1,29 +1,40 @@
 /* ============================================================
    1) GLOBAL RESET & THEME
-   - Kekal konsisten di TV / Laptop / Tablet
+   👉 TUKAR WARNA UTAMA GAME DI SINI
 ============================================================ */
 :root {
-  --bg-main: #0b0f0c;
-  --accent: #7CFF9A;
-  --accent-soft: rgba(124,255,154,0.25);
-  --panel-bg: rgba(255,255,255,0.1);
-  --border-soft: rgba(180,220,180,0.35);
+  /* ===== BACKGROUND UTAMA ===== */
+  --bg-main: #0b0f0c;                 /* Latar belakang asas (gelap) */
+
+  /* ===== WARNA TEMA / AKSEN ===== */
+  --accent: #7CFF9A;                  /* Warna utama (tajuk, scan line, glow) */
+  --accent-soft: rgba(124,255,154,0.25); /* Glow lembut tema */
+
+  /* ===== PANEL & BORDER ===== */
+  --panel-bg: rgba(255,255,255,0.1);  /* Latar panel info / sidebar */
+  --border-soft: rgba(180,220,180,0.35); /* Border lembut semua box */
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* ============================================================
+   LATAR BELAKANG PAGE
+============================================================ */
 body {
   margin: 0;
+
+  /* Background utama page */
   background: radial-gradient(circle at top, #111 0%, #050706 60%);
-  color: #eaffef;
+
+  color: #eaffef; /* Warna teks default */
   font-family: "Segoe UI", system-ui, sans-serif;
   overflow-x: hidden;
 }
 
 /* ============================================================
-   2) APP CONTAINER (KIOSK SAFE AREA)
+   2) APP CONTAINER (ZON SELAMAT TV / KIOSK)
 ============================================================ */
 .app-container {
   max-width: 1100px;
@@ -33,13 +44,17 @@ body {
 }
 
 /* ============================================================
-   3) TITLE (GAME SHOW STYLE)
+   3) TITLE (TAJUK GAME)
 ============================================================ */
 .title {
   font-size: clamp(2rem, 3vw, 3rem);
   letter-spacing: 2px;
   margin-bottom: 24px;
+
+  /* Warna ikut theme */
   color: var(--accent);
+
+  /* Glow tajuk */
   text-shadow:
     0 0 10px rgba(124,255,154,0.5),
     0 0 25px rgba(124,255,154,0.25);
@@ -62,12 +77,16 @@ body {
   opacity: 0.85;
 }
 
+/* ===== BUTANG START / CONNECT (OREN) ===== */
 .start-btn,
 #connectArduinoBtn {
   padding: 10px 20px;
   border-radius: 12px;
   border: none;
+
+  /* Gradient oren = aksi / mula */
   background: linear-gradient(180deg, #ffb84d, #ff9800);
+
   color: #000;
   font-weight: bold;
   cursor: pointer;
@@ -80,6 +99,7 @@ body {
   box-shadow: 0 6px 18px rgba(255,160,0,0.5);
 }
 
+/* ===== BUTANG DISABLE ===== */
 button:disabled,
 .btn-locked {
   opacity: 0.5;
@@ -88,21 +108,22 @@ button:disabled,
 }
 
 /* ============================================================
-   5) CAMERA BOX (SCANNER) – FIXED & STABLE
+   5) CAMERA BOX (SCANNER)
 ============================================================ */
 .video-box {
   position: relative;
   width: 420px;
-  height: 420px;          /* SAIZ KEKAL */
+  height: 420px;      /* SAIZ KEKAL */
   margin: 18px auto;
   border-radius: 18px;
   overflow: hidden;
-  background: #000;
+
+  background: #000; /* Background video */
   border: 3px solid var(--border-soft);
   box-shadow: 0 0 25px rgba(124,255,154,0.15);
 }
 
-/* VIDEO – isi penuh box, TAK ubah layout */
+/* VIDEO PENUH BOX */
 #video {
   position: absolute;
   inset: 0;
@@ -112,17 +133,18 @@ button:disabled,
   background: #000;
 }
 
-/* CANVAS – UNTUK PROSES QR SAHAJA (TAK NAMPAK) */
+/* CANVAS QR – SEMBUNYI */
 #qr-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;              /* SEMBUNYI */
+  opacity: 0;
   pointer-events: none;
 }
+
 /* ============================================================
-   6) SCANNER OVERLAY (KIOSK STYLE)
+   6) SCANNER OVERLAY
 ============================================================ */
 .scanner-overlay {
   position: absolute;
@@ -135,20 +157,22 @@ body.scanning .scanner-overlay {
   display: block;
 }
 
-/* Scan area (lebih kecil & fokus) */
+/* Area fokus scan */
 .scan-area {
   position: absolute;
   inset: 18%;
   border-radius: 12px;
 }
 
-/* Scan line */
+/* Garisan scan bergerak */
 .scan-line {
-  position: absolute;
   width: 100%;
   height: 3px;
+
+  /* Warna ikut theme */
   background: var(--accent);
   box-shadow: 0 0 12px rgba(124,255,154,0.8);
+
   animation: scanMove 2s linear infinite;
 }
 
@@ -158,18 +182,20 @@ body.scanning .scanner-overlay {
 }
 
 /* ============================================================
-   7) INFO PANEL (DIBESARKAN UNTUK TV)
+   7) INFO PANEL (SCORE / TIMER / ROUND)
 ============================================================ */
 .info-panel {
   margin: 22px auto 10px;
-  width: 100%;
   max-width: 720px;
   padding: 22px 26px;
+
+  /* Latar panel */
   background: linear-gradient(
     180deg,
     rgba(255,255,255,0.14),
     rgba(255,255,255,0.06)
   );
+
   border-radius: 22px;
   border: 3px solid var(--border-soft);
   backdrop-filter: blur(10px);
@@ -187,12 +213,16 @@ body.scanning .scanner-overlay {
 .value {
   font-size: clamp(1.8rem, 2.8vw, 2.6rem);
   font-weight: 800;
+
+  /* Warna nombor */
   color: #eaffd5;
+
+  /* Glow nombor */
   text-shadow: 0 0 10px rgba(180,255,200,0.8);
 }
 
 /* ============================================================
-   8) ANSWER BUTTONS (GAME SHOW)
+   8) ANSWER BUTTONS
 ============================================================ */
 .button-panel {
   display: flex;
@@ -212,11 +242,13 @@ body.scanning .scanner-overlay {
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
+/* BETUL = HIJAU */
 .correct {
   background: linear-gradient(180deg, #38e57c, #1fb85b);
   box-shadow: 0 0 25px rgba(56,229,124,0.6);
 }
 
+/* SALAH = MERAH */
 .wrong {
   background: linear-gradient(180deg, #ff6b6b, #e74c3c);
   box-shadow: 0 0 25px rgba(255,107,107,0.6);
@@ -227,243 +259,47 @@ body.scanning .scanner-overlay {
 }
 
 /* ============================================================
-   9) MODAL (KEKAL – VISUAL)
+   9) QUESTION BOX (SOALAN)
 ============================================================ */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #111;
-  padding: 30px 34px;
-  border-radius: 18px;
-  border: 3px solid var(--border-soft);
-  text-align: center;
-}
-
-/* ============================================================
-   10) HALL OF FAME (SIDEBAR STABIL)
-============================================================ */
-.sidebar {
-  position: fixed;
-  right: 20px;
-  top: 20px;
-  width: 280px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(8px);
-  border: 2px solid var(--border-soft);
-  z-index: 900;
-}
-
-/* ============================================================
-   11) FULLSCREEN & BACK BUTTON
-============================================================ */
-#fullscreenBtn,
-.back-home-btn {
-  position: fixed;
-  top: 14px;
-  padding: 8px 16px;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  z-index: 1000;
-}
-
-#fullscreenBtn { right: 14px; }
-.back-home-btn { left: 14px; }
-
-#fullscreenBtn:hover,
-.back-home-btn:hover {
-  background: rgba(0,0,0,0.9);
-}
-
-/* ============================================================
-   HALL OF FAME – RESPONSIVE SAFETY
-   Digunakan untuk SEMUA MODE (TV / Laptop / Tablet)
-============================================================ */
-
-/* Laptop / Tablet sederhana */
-@media (max-width: 1200px) {
-  .sidebar {
-    width: 200px;
-    opacity: 0.92;
-  }
-
-  .app-container {
-    margin-left: 0;
-  }
-}
-
-/* Tablet / Skrin kecil */
-@media (max-width: 900px) {
-  .sidebar {
-    display: none;
-  }
-}
-
-/* Mobile / sangat kecil */
-@media (max-width: 600px) {
-  body {
-    overflow-x: hidden;
-  }
-}
-
-/* ============================================================
-   AUTO HIDE HALL OF FAME WHEN GAME STARTS
-============================================================ */
-body.game-started .sidebar {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(40px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-/* ============================================================
-   QUESTION BOX (SOALAN)
-============================================================ */
-
 .question-box {
   margin: 20px auto 10px;
   padding: 18px 22px;
-
   max-width: 900px;
   width: 92%;
 
-  background:
-    linear-gradient(135deg, #2f3e46, #354f52);
+  /* Warna kotak soalan */
+  background: linear-gradient(135deg, #2f3e46, #354f52);
   border: 3px solid #84a98c;
+
   border-radius: 16px;
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,0.4),
-    inset 0 0 12px rgba(255,255,255,0.05);
-
   text-align: center;
-
-  animation: questionPop 0.35s ease-out;
 }
 
-/* TEKS SOALAN */
-#questionText {
-  font-size: clamp(1.4rem, 3.5vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  line-height: 1.35;
-
-  color: #f1faee;
-  text-shadow:
-    0 2px 4px rgba(0,0,0,0.6);
-
-  user-select: none;
-}
-
-/* ANIMASI MASUK */
-@keyframes questionPop {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-.question-box::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background-image:
-    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 6px 6px;
-  pointer-events: none;
-}
 /* ============================================================
-   ANSWER FEEDBACK (QUESTION BOX)
+   10) TIME BAR
 ============================================================ */
-
-/* BETUL */
-.question-correct {
-  animation: correctPulse 0.6s ease;
-  border-color: #38b000 !important;
-  box-shadow: 0 0 25px rgba(56,176,0,0.8);
-}
-
-/* SALAH */
-.question-wrong {
-  animation: wrongShake 0.4s ease;
-  border-color: #d00000 !important;
-  box-shadow: 0 0 25px rgba(208,0,0,0.8);
-}
-
-@keyframes correctPulse {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.04); }
-  100% { transform: scale(1); }
-}
-
-@keyframes wrongShake {
-  0%   { transform: translateX(0); }
-  25%  { transform: translateX(-8px); }
-  50%  { transform: translateX(8px); }
-  75%  { transform: translateX(-6px); }
-  100% { transform: translateX(0); }
-}
-/* ============================================================
-   TIME BAR
-============================================================ */
-
 .time-bar {
   width: 100%;
   height: 10px;
   margin-top: 14px;
-
   background: rgba(255,255,255,0.15);
   border-radius: 6px;
-  overflow: hidden;
 }
 
 #timeBarFill {
-  height: 100%;
-  width: 100%;
+  /* Biru → Kuning (masa berjalan) */
   background: linear-gradient(90deg, #90dbf4, #ffb703);
-  transition: width 0.9s linear;
-}
-/* ============================================================
-   HOF
-============================================================ */
-.hof-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
 }
 
+/* ============================================================
+   11) HALL OF FAME
+============================================================ */
 .hof-item {
-  padding: 8px 6px;
-  margin-bottom: 6px;
   border-bottom: 1px dashed rgba(255,255,255,0.2);
-  font-size: 0.9rem;
 }
 
 .hof-reset-btn {
-  margin-top: 10px;
-  width: 100%;
-  padding: 6px;
-  font-size: 0.85rem;
-  background: #5a2a2a;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  background: #5a2a2a; /* Merah gelap = bahaya */
 }
 
 .hof-reset-btn:hover {

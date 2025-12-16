@@ -236,3 +236,61 @@ body::after {
     grid-template-columns: 1fr;
   }
 }
+/*--------------------
+  KHUSUS UNTUK LOGO
+--------------------*/
+
+.floating-logo {
+  position: fixed;
+
+  /* sentiasa di tengah skrin */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+
+  /* saiz asas (akan diubah oleh JS ikut zoom) */
+  width: 320px;
+  height: auto;
+
+  /* semi-transparent watermark */
+  opacity: 0.05;
+
+  /* TAK ganggu interaksi */
+  pointer-events: none;
+
+  /* layer bawah */
+  z-index: 0;
+
+  /* lembutkan rupa */
+  filter: grayscale(100%) blur(0.3px);
+
+  /* smooth transition */
+  transition: transform 0.25s ease, opacity 0.25s ease;
+
+  /* animasi nafas */
+  animation: logoBreath 8s ease-in-out infinite;
+}
+
+/* Orientation: Portrait */
+@media (orientation: portrait) {
+  .floating-logo {
+    opacity: 0.04;
+  }
+}
+
+/* Orientation: Landscape */
+@media (orientation: landscape) {
+  .floating-logo {
+    opacity: 0.05;
+  }
+}
+
+/* Animasi lembut */
+@keyframes logoBreath {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(var(--logo-scale, 1));
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(calc(var(--logo-scale, 1) * 1.03));
+  }
+}

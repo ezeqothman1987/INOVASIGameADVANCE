@@ -56,9 +56,10 @@
 </div>
   
   <!-- =======================
-       LOGO JMG(Macam watermark je)
+       LOGO JMG dan BORDER FRAME
        ======================= -->
 <img src="JMGLogo.svg" class="floating-logo" alt="">
+<div class="screen-frame"></div>
    <!-- Script untuk zoom -->
   <script>
   (function () {
@@ -84,6 +85,36 @@
     updateLogoScale();
   })();
   </script>
+  <script>
+(function () {
+  const frame = document.querySelector('.screen-frame');
+
+  function updateFrameScale() {
+    let scale = 1;
+
+    if (window.visualViewport) {
+      scale = 1 / window.visualViewport.scale;
+    }
+
+    // hadkan skala
+    scale = Math.min(Math.max(scale, 0.8), 1.5);
+
+    frame.style.setProperty('--frame-scale', scale);
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateFrameScale);
+    window.visualViewport.addEventListener('scroll', updateFrameScale);
+  }
+
+  window.addEventListener('resize', updateFrameScale);
+
+  updateFrameScale();
+})();
+</script>
+  <!-- =======================
+       FINAL(JANGAN USIK)
+       ======================= -->
 <script src="script.js"></script>
 </body>
 </html>

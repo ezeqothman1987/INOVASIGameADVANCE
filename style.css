@@ -249,7 +249,7 @@ body::after {
   transform: translate(-50%, -50%) scale(2);
 
   /* saiz asas (akan diubah oleh JS ikut zoom) */
-  width: 640px; /* 2x dari 320px */
+  width: 960px; /* 3x dari 320px */
   height: auto;
 
   /* semi-transparent watermark */

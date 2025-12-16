@@ -54,7 +54,34 @@
   </footer>
 
 </div>
+  
+  <---LOGO JMG---->
 <img src="JMGLogo.svg" class="floating-logo" alt="">
+   <!-- Script untuk zoom -->
+  <script>
+  (function () {
+    const logo = document.querySelector('.floating-logo');
+
+    function updateLogoScale() {
+      let scale = 1;
+
+      if (window.visualViewport) {
+        scale = 1 / window.visualViewport.scale;
+      }
+
+      scale = Math.min(Math.max(scale, 0.6), 1.4);
+      logo.style.setProperty('--logo-scale', scale);
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateLogoScale);
+      window.visualViewport.addEventListener('scroll', updateLogoScale);
+    }
+
+    window.addEventListener('resize', updateLogoScale);
+    updateLogoScale();
+  })();
+  </script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -54,39 +54,6 @@
   </footer>
 
 </div>
-    <!-- =======================
-       POKOK DAN MATAHARI
-       ======================= -->
-<img src="Matahari.svg" class="bg-sun" alt="">
-<img src="Pokok.svg" class="bg-tree" alt="">
-  <script>
-(function () {
-  const elements = document.querySelectorAll('.bg-sun, .bg-tree');
-
-  function updateScale() {
-    let scale = 1;
-
-    if (window.visualViewport) {
-      scale = 1 / window.visualViewport.scale;
-    }
-
-    // hadkan skala
-    scale = Math.min(Math.max(scale, 0.6), 1.5);
-
-    elements.forEach(el => {
-      el.style.setProperty('--bg-scale', scale);
-    });
-  }
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateScale);
-    window.visualViewport.addEventListener('scroll', updateScale);
-  }
-
-  window.addEventListener('resize', updateScale);
-  updateScale();
-})();
-</script>
   <!-- =======================
        LOGO JMG dan BORDER FRAME
        ======================= -->

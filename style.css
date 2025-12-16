@@ -246,10 +246,10 @@ body::after {
   /* sentiasa di tengah skrin */
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%) scale(2);
 
   /* saiz asas (akan diubah oleh JS ikut zoom) */
-  width: 320px;
+  width: 640px; /* 2x dari 320px */
   height: auto;
 
   /* semi-transparent watermark */

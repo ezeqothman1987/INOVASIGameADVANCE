@@ -253,7 +253,7 @@ body::after {
   height: auto;
 
   /* semi-transparent watermark */
-  opacity: 0.05;
+  opacity: 0.15;
 
   /* TAK ganggu interaksi */
   pointer-events: none;

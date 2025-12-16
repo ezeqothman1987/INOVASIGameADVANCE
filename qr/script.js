@@ -6,7 +6,7 @@
 /* =========================
    DEBUG MODE
 ========================= */
-const DEBUG = true;
+const DEBUG = false;
 function debugLog(...args) {
   if (DEBUG) console.log("[DEBUG]", ...args);
 }

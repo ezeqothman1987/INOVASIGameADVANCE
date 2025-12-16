@@ -316,3 +316,46 @@ body::after {
   transform-origin: center center;
   transition: transform 0.25s ease;
 }
+/*--------------------
+  KHUSUS UNTUKPKOK DAN MATAHARI SVG
+--------------------*/
+
+.bg-sun, .bg-tree {
+  position: fixed;
+  width: 200px; /* saiz asas, nanti scale ikut JS */
+  height: auto;
+
+  pointer-events: none; /* tak ganggu klik */
+  z-index: 0;           /* pastikan di belakang content */
+
+  transform: scale(var(--bg-scale, 1));
+  transition: transform 0.25s ease;
+
+  opacity: 0.15; /* sedikit transparan, boleh adjust */
+}
+
+/* Kedudukan */
+.bg-sun {
+  top: 2vh;
+  right: 2vw;
+}
+
+.bg-tree {
+  bottom: 2vh;
+  left: 2vw;
+}
+
+/* Orientation */
+@media (orientation: portrait) {
+  .bg-sun, .bg-tree {
+    width: 150px;
+    opacity: 0.12;
+  }
+}
+
+@media (orientation: landscape) {
+  .bg-sun, .bg-tree {
+    width: 200px;
+    opacity: 0.15;
+  }
+}

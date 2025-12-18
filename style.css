@@ -294,25 +294,3 @@ body::after {
     transform: translate(-50%, -50%) scale(calc(var(--logo-scale, 1) * 1.03));
   }
 }
-/*--------------------
-  KHUSUS UNTUK SCREEN FRAME
---------------------*/
-
-.screen-frame {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;    /* ikut lebar viewport */
-  height: 100vh;   /* ikut tinggi viewport */
-  pointer-events: none;  /* tak ganggu klik */
-  z-index: 9999;          /* pastikan di atas kandungan */
-  
-  /* gaya frame */
-  border: 10px solid #8b4a12; /* solid color */
-  box-sizing: border-box;  /* pastikan border tak keluar dari viewport */
-  
-  /* untuk animasi smooth bila resize / zoom */
-  transform: scale(var(--frame-scale, 1));
-  transform-origin: center center;
-  transition: transform 0.25s ease;
-}

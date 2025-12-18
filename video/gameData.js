@@ -48,7 +48,7 @@ const QUESTION_BANK = {
   ],
 
   Kuarza: [
-    { q: "Mineral ini merupaka nsalah satu di antara mineral paling banyak di kerak bumi", a: true },
+    { q: "Mineral ini merupakan salah satu di antara mineral paling banyak di kerak bumi", a: true },
     { q: "Mineral ini digunakan dalam pembuatan utama senjata api, cawan plastik & kertas.", a: false }
   ],
    
